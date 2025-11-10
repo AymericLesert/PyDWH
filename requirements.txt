@@ -1,1 +1,6 @@
-pip==24.3.1
+cffi==2.0.0
+cryptography==46.0.3
+dotenv==0.9.9
+pip==25.3
+pycparser==2.23
+python-dotenv==1.2.1
