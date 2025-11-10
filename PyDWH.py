@@ -2,22 +2,25 @@
 # pylint: disable=ungrouped-imports
 
 """
-Main program (Syncytium)
-- api
-- web
-- websocket
+Main program (PyDWH)
+- key.new
+- key.encrypt
+- key.decrypt
+- rules
 """
 
 import argparse
-import hashlib
 import os
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 
+from configuration.configuration import DWHConfiguration
+from logger.logger import DWHLogger
+
 load_dotenv()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Start one of the piece of Syncytium application")
+    parser = argparse.ArgumentParser(description="Execution des règles d'enrichissement de l'entrepot")
     parser.add_argument('--name', type=str, required=True, help="key.new, ")
     parser.add_argument('--password', type=str, required=False, help='Password')
     args = parser.parse_args()
@@ -31,3 +34,8 @@ if __name__ == "__main__":
     elif args.name == "key.decrypt":
         cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
         print("Password encrypted :", cipher_suite.decrypt(bytes(args.password, 'utf-8')).decode('utf-8'))
+    elif args.name == "rules":
+        logger = DWHLogger(DWHConfiguration('../PyDWHConfig/config.yml'))
+        logger.open()
+        # TODO : Execute rules
+        logger.close()

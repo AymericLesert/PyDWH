@@ -22,6 +22,19 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="configuration\configuration.py" />
+    <Compile Include="configuration\configurationitem.py" />
+    <Compile Include="configuration\__init__.py" />
+    <Compile Include="exception\exception.py" />
+    <Compile Include="exception\exceptiondatabase.py" />
+    <Compile Include="exception\exceptiondatabasenotconnected.py" />
+    <Compile Include="exception\exceptiondatabaserequest.py" />
+    <Compile Include="exception\exceptiondatabaseunknown.py" />
+    <Compile Include="exception\__init__.py" />
+    <Compile Include="logger\logger.py" />
+    <Compile Include="logger\loggerobject.py" />
+    <Compile Include="logger\loggertimer.py" />
+    <Compile Include="logger\__init__.py" />
     <Compile Include="PyDWH.py" />
   </ItemGroup>
   <ItemGroup>
@@ -37,7 +50,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env" />
+    <Content Include="LICENSE.txt" />
+    <Content Include="PROJECT" />
+    <Content Include="README.md" />
     <Content Include="requirements.txt" />
+    <Content Include="VERSION" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="configuration\" />
+    <Folder Include="logger\" />
+    <Folder Include="exception\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
