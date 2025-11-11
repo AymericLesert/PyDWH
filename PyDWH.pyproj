@@ -4,7 +4,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>92a0a3c8-44e8-4439-be1a-7ba55a6b533e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PyDWH.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -12,6 +13,7 @@
     <Name>PyDWH</Name>
     <RootNamespace>PyDWH</RootNamespace>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,20 +24,26 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="configuration\configuration.py" />
-    <Compile Include="configuration\configurationitem.py" />
-    <Compile Include="configuration\__init__.py" />
-    <Compile Include="exception\exception.py" />
-    <Compile Include="exception\exceptiondatabase.py" />
-    <Compile Include="exception\exceptiondatabasenotconnected.py" />
-    <Compile Include="exception\exceptiondatabaserequest.py" />
-    <Compile Include="exception\exceptiondatabaseunknown.py" />
-    <Compile Include="exception\__init__.py" />
-    <Compile Include="logger\logger.py" />
-    <Compile Include="logger\loggerobject.py" />
-    <Compile Include="logger\loggertimer.py" />
-    <Compile Include="logger\__init__.py" />
-    <Compile Include="PyDWH.py" />
+    <Compile Include="src\configuration\configuration.py" />
+    <Compile Include="src\configuration\configurationitem.py" />
+    <Compile Include="src\configuration\__init__.py" />
+    <Compile Include="src\exception\exception.py" />
+    <Compile Include="src\exception\exceptiondatabase.py" />
+    <Compile Include="src\exception\exceptiondatabasenotconnected.py" />
+    <Compile Include="src\exception\exceptiondatabaserequest.py" />
+    <Compile Include="src\exception\exceptiondatabaseunknown.py" />
+    <Compile Include="src\exception\__init__.py" />
+    <Compile Include="src\logger\logger.py" />
+    <Compile Include="src\logger\loggerobject.py" />
+    <Compile Include="src\logger\loggertimer.py" />
+    <Compile Include="src\logger\__init__.py" />
+    <Compile Include="src\scripts\dwh_key_decrypt.py" />
+    <Compile Include="src\scripts\dwh_key_encrypt.py" />
+    <Compile Include="src\scripts\dwh_rules.py" />
+    <Compile Include="src\scripts\dwh_key_new.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="src\scripts\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
@@ -52,14 +60,17 @@
     <Content Include=".env" />
     <Content Include="LICENSE.txt" />
     <Content Include="PROJECT" />
+    <Content Include="pyproject.toml" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Content Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="configuration\" />
-    <Folder Include="logger\" />
-    <Folder Include="exception\" />
+    <Folder Include="src\configuration\" />
+    <Folder Include="src\logger\" />
+    <Folder Include="src\exception\" />
+    <Folder Include="src\" />
+    <Folder Include="src\scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
