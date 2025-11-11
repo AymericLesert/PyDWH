@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # Variables systèmes
 .env
 /dist
+./src/PyDWH.egg-info
