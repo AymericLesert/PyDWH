@@ -1,6 +1,0 @@
-configuration
-exception
-loader
-logger
-rules
-scripts

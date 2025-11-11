@@ -1,5 +1,0 @@
-[console_scripts]
-dwh-key-decrypt = scripts.dwh_key_decrypt:execute
-dwh-key-encrypt = scripts.dwh_key_encrypt:execute
-dwh-key-new = scripts.dwh_key_new:execute
-dwh-rules = scripts.dwh_rules:execute
