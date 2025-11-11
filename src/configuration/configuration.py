@@ -7,6 +7,7 @@ This module handles the configuration of the current application.
 
 import inspect
 import os
+import glob
 import yaml
 
 from configuration.configurationitem import DWHConfigurationItem
@@ -51,9 +52,14 @@ class DWHConfiguration:
             items = filename
 
         if isinstance(items, str):
-            if not os.path.exists(root + items):
+            filename = None
+            if os.path.exists(items) and os.path.isfile(items):
+                filename = items
+            elif os.path.exists(os.path.join(root, items)) and os.path.isfile(os.path.join(root, items)):
+                filename = os.path.join(root, items)
+            else:
                 return items
-            filename = root + items
+
             with open(filename, 'r', encoding="utf-8") as file:
                 subitems = self._load(None, yaml.safe_load(file), os.path.dirname(filename) + '/')
             if subitems is None:
@@ -63,7 +69,15 @@ class DWHConfiguration:
         if isinstance(items, list):
             newitems = []
             for value in items:
-                newitems.append(self._load(None, value, root))
+                empty = True
+                for subvalue in glob.glob(os.path.join(root, value)):
+                    empty = False
+                    newitems.append(subvalue)
+                if empty:
+                    newitems.append(value)
+
+            for i, value in enumerate(newitems):
+                newitems[i] = self._load(None, value, root)
             return newitems
 
         if isinstance(items, dict):
@@ -90,6 +104,9 @@ class DWHConfiguration:
         if the key doesn't exist, the default value is retrieved
         """
         return self.__items.get(key, default_value)
+
+    def __getattr__(self, name):
+        return self.get(name)
 
     def __init__(self, filename = None):
         self.__configuration = {}

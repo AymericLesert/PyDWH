@@ -10,23 +10,23 @@ import time
 import getpass
 from functools import wraps
 
-from .logger import DSLogger
+from .logger import DWHLogger
 
-class DSLoggerObject:
+class DWHLoggerObject:
     """Base object describing logger functions"""
 
     @property
     def isverbose(self):
         """Indicates if the log file is verbose mode"""
-        if DSLogger.Instance:
-            return DSLogger.Instance.isverbose
+        if DWHLogger.Instance:
+            return DWHLogger.Instance.isverbose
         return False
 
     @property
     def isdebug(self):
         """Indicates if the log file is debug mode"""
-        if DSLogger.Instance:
-            return DSLogger.Instance.isdebug
+        if DWHLogger.Instance:
+            return DWHLogger.Instance.isdebug
         return False
 
     @property
@@ -41,38 +41,38 @@ class DSLoggerObject:
 
     def verbose(self, message):
         """This function traces a verbose message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.verbose(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.verbose(self.__user, self.__class__.__name__, __name__, message)
 
     def debug(self, message):
         """This function traces a debug message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.debug(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.debug(self.__user, self.__class__.__name__, __name__, message)
 
     def info(self, message):
         """This function traces an info message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.info(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.info(self.__user, self.__class__.__name__, __name__, message)
 
     def warning(self, message):
         """This function traces a warning message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.warning(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.warning(self.__user, self.__class__.__name__, __name__, message)
 
     def error(self, message):
         """This function traces an error message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.error(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.error(self.__user, self.__class__.__name__, __name__, message)
 
     def critical(self, message):
         """This function traces a critical message into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.critical(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.critical(self.__user, self.__class__.__name__, __name__, message)
 
     def exception(self, message):
         """This function traces the current exception raised into the log file"""
-        if DSLogger.Instance:
-            DSLogger.Instance.exception(self.__user, self.__class__.__name__, __name__, message)
+        if DWHLogger.Instance:
+            DWHLogger.Instance.exception(self.__user, self.__class__.__name__, __name__, message)
 
     def __init__(self):
         self.__user = os.getlogin()
@@ -92,20 +92,20 @@ def asyncloggerexecutiontime(func):
                 except OSError:
                     username = getpass.getuser()
 
-            if DSLogger.Instance:
-                DSLogger.Instance.debug(username, func.__name__, __name__, "Starting ...")
-                DSLogger.Instance.verbose(username, func.__name__, __name__, f"Execution within parameters ({args}, {kwargs})...")
+            if DWHLogger.Instance:
+                DWHLogger.Instance.debug(username, func.__name__, __name__, "Starting ...")
+                DWHLogger.Instance.verbose(username, func.__name__, __name__, f"Execution within parameters ({args}, {kwargs})...")
 
             start_time = time.time()
             result = await func(*args, **kwargs)
             end_time = time.time()
             execution_time = end_time - start_time
 
-            if DSLogger.Instance:
-                DSLogger.Instance.info(username, func.__name__, __name__, f"Execution in {execution_time:.4f} seconds")
+            if DWHLogger.Instance:
+                DWHLogger.Instance.info(username, func.__name__, __name__, f"Execution in {execution_time:.4f} seconds")
 
             return result
         except:
-            DSLogger.Instance.exception(username, func.__name__, __name__, "Error on executing function")
+            DWHLogger.Instance.exception(username, func.__name__, __name__, "Error on executing function")
             raise
     return wrapper

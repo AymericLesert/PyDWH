@@ -44,10 +44,7 @@ $> python -m build
 
 - dotenv
 - cryptography
-
-```
-$> python -m pip install -r requirements.txt
-```
+- pyyaml
 
 Pour déployer :
 
@@ -61,5 +58,5 @@ Lancement :
 
 ```
 $> dwh/Scripts/Activate
-$> dwh_key_new
+$> dwh-key-new
 ```

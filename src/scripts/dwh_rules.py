@@ -7,6 +7,7 @@ from cryptography.fernet import Fernet
 
 from configuration.configuration import DWHConfiguration
 from logger.logger import DWHLogger
+from rules.instance import DWHInstance
 
 def execute():
     parser = argparse.ArgumentParser(description="Execution des règles d'enrichissement de l'entrepot")
@@ -15,8 +16,12 @@ def execute():
 
     load_dotenv()
     
-    logger = DWHLogger(DWHConfiguration(args.config))
+    configuration = DWHConfiguration(args.config)
+    logger = DWHLogger(configuration)
     logger.open()
+    for item in configuration.get('instances', []):
+        with DWHInstance(item):
+            pass
     # TODO : Execute rules
     logger.close()
 

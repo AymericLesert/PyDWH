@@ -247,7 +247,7 @@ class DWHLogger:
                 pass
 
     def __init__(self, configuration):
-        logging.config.dictConfig(configuration.items.logging.to_dict())
+        logging.config.dictConfig(configuration.logging.to_dict())
 
         self.__configuration = configuration
         self.__logger = logging.getLogger()

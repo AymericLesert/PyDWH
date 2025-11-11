@@ -14,6 +14,7 @@
     <RootNamespace>PyDWH</RootNamespace>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
+    <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,10 +34,15 @@
     <Compile Include="src\exception\exceptiondatabaserequest.py" />
     <Compile Include="src\exception\exceptiondatabaseunknown.py" />
     <Compile Include="src\exception\__init__.py" />
+    <Compile Include="src\loader\loader.py" />
+    <Compile Include="src\loader\loadermysql.py" />
+    <Compile Include="src\loader\__init__.py" />
     <Compile Include="src\logger\logger.py" />
     <Compile Include="src\logger\loggerobject.py" />
     <Compile Include="src\logger\loggertimer.py" />
     <Compile Include="src\logger\__init__.py" />
+    <Compile Include="src\rules\instance.py" />
+    <Compile Include="src\rules\__init__.py" />
     <Compile Include="src\scripts\dwh_key_decrypt.py" />
     <Compile Include="src\scripts\dwh_key_encrypt.py" />
     <Compile Include="src\scripts\dwh_rules.py" />
@@ -70,6 +76,8 @@
     <Folder Include="src\logger\" />
     <Folder Include="src\exception\" />
     <Folder Include="src\" />
+    <Folder Include="src\loader\" />
+    <Folder Include="src\rules\" />
     <Folder Include="src\scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

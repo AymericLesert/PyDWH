@@ -18,10 +18,15 @@ src/exception/exceptiondatabase.py
 src/exception/exceptiondatabasenotconnected.py
 src/exception/exceptiondatabaserequest.py
 src/exception/exceptiondatabaseunknown.py
+src/loader/__init__.py
+src/loader/loader.py
+src/loader/loadermysql.py
 src/logger/__init__.py
 src/logger/logger.py
 src/logger/loggerobject.py
 src/logger/loggertimer.py
+src/rules/__init__.py
+src/rules/instance.py
 src/scripts/__init__.py
 src/scripts/dwh_key_decrypt.py
 src/scripts/dwh_key_encrypt.py
