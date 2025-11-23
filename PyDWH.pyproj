@@ -28,15 +28,23 @@
     <Compile Include="src\configuration\configuration.py" />
     <Compile Include="src\configuration\configurationitem.py" />
     <Compile Include="src\configuration\__init__.py" />
+    <Compile Include="src\connector\database\field.py" />
+    <Compile Include="src\connector\database\table.py" />
+    <Compile Include="src\connector\database\schema.py" />
+    <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\writer\writermysql.py" />
+    <Compile Include="src\connector\writer\writer.py" />
+    <Compile Include="src\connector\writer\__init__.py" />
+    <Compile Include="src\connector\__init__.py" />
     <Compile Include="src\exception\exception.py" />
     <Compile Include="src\exception\exceptiondatabase.py" />
     <Compile Include="src\exception\exceptiondatabasenotconnected.py" />
     <Compile Include="src\exception\exceptiondatabaserequest.py" />
     <Compile Include="src\exception\exceptiondatabaseunknown.py" />
     <Compile Include="src\exception\__init__.py" />
-    <Compile Include="src\loader\loader.py" />
-    <Compile Include="src\loader\loadermysql.py" />
-    <Compile Include="src\loader\__init__.py" />
+    <Compile Include="src\connector\reader\reader.py" />
+    <Compile Include="src\connector\reader\readermysql.py" />
+    <Compile Include="src\connector\reader\__init__.py" />
     <Compile Include="src\logger\logger.py" />
     <Compile Include="src\logger\loggerobject.py" />
     <Compile Include="src\logger\loggertimer.py" />
@@ -73,10 +81,13 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\configuration\" />
+    <Folder Include="src\connector\database\" />
     <Folder Include="src\logger\" />
     <Folder Include="src\exception\" />
     <Folder Include="src\" />
-    <Folder Include="src\loader\" />
+    <Folder Include="src\connector\" />
+    <Folder Include="src\connector\reader\" />
+    <Folder Include="src\connector\writer\" />
     <Folder Include="src\rules\" />
     <Folder Include="src\scripts\" />
   </ItemGroup>

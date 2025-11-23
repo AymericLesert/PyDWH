@@ -3,6 +3,7 @@ cffi==2.0.0
 colorama==0.4.6
 cryptography==46.0.3
 dotenv==0.9.9
+mysql-connector-python==9.5.0
 packaging==25.0
 pip==25.3
 pycparser==2.23
