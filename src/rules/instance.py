@@ -25,24 +25,20 @@ class DWHInstance(DWHLoggerObject):
         self.open()
         return self
 
-    def __exit__(self, *args):
-        """Close the instance"""
-        self.close()
-
     def open(self):
-        self.info(f"[{self.name}] Openning the instance ...")
+        self.info("Openning the instance ...")
         
         for source in self.__sources:
             try:
                 source.open()
             except Exception as exc:
-                self.exception(f"Exception on openning source")
+                self.exception("Exception on openning source")
 
         for target in self.__targets:
             try:
                 target.open()
             except Exception as exc:
-                self.exception(f"Exception on openning target")
+                self.exception("Exception on openning target")
 
     @property
     def schema(self):
@@ -50,19 +46,15 @@ class DWHInstance(DWHLoggerObject):
             return self.__schema
 
         self.info("Extracting schema")
-        self.__schema = DWHConnectorDatabaseSchema(self.__name)
+        self.__schema = DWHConnectorDatabaseSchema(self.name)
         
         for source in self.__sources:
             try:
                 self.__schema.append(source.schema)
-            except Exception as exc:
-                self.exception(f"Exception on getting schema")
+            except:
+                self.exception("Exception on getting schema")
 
-        if self.isverbose:
-            for table_name, table in self.__schema.tables.items():
-                table.verbose(f"Table")
-                for field_name, field in table.fields.items():
-                    field.verbose(f"Field : ({field.type})")
+        self.info(f"Schema contains {self.__schema.count_tables} tables and {self.__schema.count_fields} fields")
 
         return self.__schema
 
@@ -76,27 +68,31 @@ class DWHInstance(DWHLoggerObject):
         pass
 
     def close(self):
-        self.info(f"[{self.name}] Closing the instance ...")
+        self.info("Closing the instance ...")
 
         for target in reversed(self.__targets):
             try:
                 target.close()
             except Exception as exc:
-                self.exception(f"Exception on closing target")
+                self.exception("Exception on closing target")
         
         for source in reversed(self.__sources):
             try:
                 source.close()
             except Exception as exc:
-                self.exception(f"Exception on closing source")
+                self.exception("Exception on closing source")
+
+    def __exit__(self, *args):
+        """Close the instance"""
+        self.close()
 
     def __init__(self, configuration):
-        super().__init__()
         self.__name = configuration.get('name', '')
+        super().__init__(self.name)
 
         # Creation des sources
 
-        self.info(f"Creating sources ...")
+        self.info("Creating sources ...")
         self.__sources = []
         for source_cfg in configuration.get('sources', []):
             for source_name in source_cfg.keys():
@@ -104,11 +100,11 @@ class DWHInstance(DWHLoggerObject):
                 try:
                     self.__sources.append(eval(source_cfg[source_name]['class'])(source_name, **source_cfg[source_name].get('parameters', {})))
                 except Exception as exc:
-                    self.exception(f"Exception on creating source")
+                    self.exception("Exception on creating source")
 
         # Creation des destinations
 
-        self.info(f"Creating targets ...")
+        self.info("Creating targets ...")
         self.__targets = []
         for target_cfg in configuration.get('destinations', []):
             for target_name in target_cfg.keys():
@@ -116,11 +112,11 @@ class DWHInstance(DWHLoggerObject):
                 try:
                     self.__targets.append(eval(target_cfg[target_name]['class'])(target_name, **target_cfg[target_name].get('parameters', {})))
                 except Exception as exc:
-                    self.exception(f"Exception on creating source")
+                    self.exception("Exception on creating source")
 
         # TODO : Creation des règles
 
-        self.info(f"Creating rules ...")
+        self.info("Creating rules ...")
         self.__rules = configuration.get('regles', [])
 
         self.__schema = None

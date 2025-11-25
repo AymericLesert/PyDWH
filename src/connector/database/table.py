@@ -11,31 +11,10 @@ from connector.database.field import DWHConnectorDatabaseField
 class DWHConnectorDatabaseTable(DWHLoggerObject):
     """This class defines a table containing Fields"""
 
-    def verbose(self, message):
-        super().verbose(f"[{self.instance.name}.{self.name}] {message}")
-
-    def debug(self, message):
-        super().debug(f"[{self.instance.name}.{self.name}] {message}")
-
-    def info(self, message):
-        super().info(f"[{self.instance.name}.{self.name}] {message}")
-
-    def warning(self, message):
-        super().warning(f"[{self.instance.name}.{self.name}] {message}")
-
-    def error(self, message):
-        super().error(f"[{self.instance.name}.{self.name}] {message}")
-
-    def critical(self, message):
-        super().critical(f"[{self.instance.name}.{self.name}] {message}")
-
-    def exception(self, message):
-        super().exception(f"[{self.instance.name}.{self.name}] {message}")
-
     @property
-    def instance(self):
-        """Get the instance of the table"""
-        return self.__instance
+    def connector(self):
+        """Get the connector of the table"""
+        return self.__connector
 
     @property
     def name(self):
@@ -47,13 +26,18 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         """Get the fields of the table"""
         return self.__fields
 
+    @property
+    def count_fields(self):
+        """Get the number of fields in the table"""
+        return len(self.__fields)
+
     def add_field(self, field_name, field_type):
         if not field_name in self.__fields:
             self.__fields[field_name] = DWHConnectorDatabaseField(self, field_name, field_type)
         return self.__fields[field_name]
 
-    def __init__(self, instance, name):
-        super().__init__()
-        self.__instance = instance
+    def __init__(self, connector, name):
+        super().__init__(f"{connector.name}.{name}")
+        self.__connector = connector
         self.__name = name
         self.__fields = {}

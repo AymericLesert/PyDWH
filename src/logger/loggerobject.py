@@ -39,44 +39,49 @@ class DWHLoggerObject:
         self.__user = user
         return self
 
+    def get_message(self, message):
+        if self.__item_id:
+            return f"[{self.__item_id}] {message}"
+        return message
+
     def verbose(self, message):
         """This function traces a verbose message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.verbose(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.verbose(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def debug(self, message):
         """This function traces a debug message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.debug(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.debug(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def info(self, message):
         """This function traces an info message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.info(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.info(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def warning(self, message):
         """This function traces a warning message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.warning(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.warning(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def error(self, message):
         """This function traces an error message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.error(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.error(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def critical(self, message):
         """This function traces a critical message into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.critical(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.critical(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
     def exception(self, message):
         """This function traces the current exception raised into the log file"""
         if DWHLogger.Instance:
-            DWHLogger.Instance.exception(self.__user, self.__class__.__name__, __name__, message)
+            DWHLogger.Instance.exception(self.__user, self.__class__.__name__, __name__, self.get_message(message))
 
-    def __init__(self):
+    def __init__(self, item_id):
         self.__user = os.getlogin()
-
+        self.__item_id = item_id
 
 def asyncloggerexecutiontime(func):
     """Trace the function calling and execution time"""

@@ -11,27 +11,6 @@ from connector.database.table import DWHConnectorDatabaseTable
 class DWHConnectorDatabaseSchema(DWHLoggerObject):
     """This class defines a schema containing Tables and Fields"""
 
-    def verbose(self, message):
-        super().verbose(f"[{self.name}] {message}")
-
-    def debug(self, message):
-        super().debug(f"[{self.name}] {message}")
-
-    def info(self, message):
-        super().info(f"[{self.name}] {message}")
-
-    def warning(self, message):
-        super().warning(f"[{self.name}] {message}")
-
-    def error(self, message):
-        super().error(f"[{self.name}] {message}")
-
-    def critical(self, message):
-        super().critical(f"[{self.name}] {message}")
-
-    def exception(self, message):
-        super().exception(f"[{self.name}] {message}")
-
     @property
     def name(self):
         """Get the name of the schema"""
@@ -42,20 +21,32 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
         """Get the tables of the schema"""
         return self.__tables
 
-    def add_table(self, table_name):
-        if not table_name in self.__tables:
-            self.__tables[table_name] = DWHConnectorDatabaseTable(self, table_name)
-        return self.__tables[table_name]
+    @property
+    def count_tables(self):
+        """Get the number of tables in the schema"""
+        return len(self.__tables)   
+
+    @property
+    def count_fields(self):
+        """Get the number of fields in the schema"""
+        count = 0
+        for table in self.__tables:
+            count += table.count_fields
+        return count
+
+    def add_table(self, connector, table_name):
+        new_table = DWHConnectorDatabaseTable(connector, table_name)
+        self.__tables.append(new_table)
+        return new_table
 
     def append(self, schema):
-        for table_name, table in schema.tables.items():
-            new_table = DWHConnectorDatabaseTable(self, table_name)
-            self.tables[table_name] = new_table
+        for table in schema.tables:
+            new_table = DWHConnectorDatabaseTable(table.connector, table.name)
+            self.__tables.append(new_table)
             for field_name, field in table.fields.items():
                 new_table.add_field(field_name, field.type)
-        pass
 
     def __init__(self, name):
-        super().__init__()
+        super().__init__(name)
         self.__name = name
-        self.__tables = {}
+        self.__tables = []

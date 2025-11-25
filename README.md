@@ -12,6 +12,14 @@ $> python -m pip install --upgrade pip
 $> python -m pip install build
 ```
 
+Pour développer :
+
+```
+$> dwh/Scripts/Activate
+$> [System.Environment]::SetEnvironmentVariable("PYTHONPATH", "src\")
+$> python ./src/scripts/dwh_rules.py --config ../PyDWHConfig/config.yml
+```
+
 Pour packager :
 
 ```

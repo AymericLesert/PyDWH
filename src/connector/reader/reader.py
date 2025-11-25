@@ -13,27 +13,6 @@ from logger.loggerobject import DWHLoggerObject
 class DWHConnectorReader(DWHLoggerObject):
     """This class defines an abstract reader"""
 
-    def verbose(self, message):
-        super().verbose(f"[{self.name}] {message}")
-
-    def debug(self, message):
-        super().debug(f"[{self.name}] {message}")
-
-    def info(self, message):
-        super().info(f"[{self.name}] {message}")
-
-    def warning(self, message):
-        super().warning(f"[{self.name}] {message}")
-
-    def error(self, message):
-        super().error(f"[{self.name}] {message}")
-
-    def critical(self, message):
-        super().critical(f"[{self.name}] {message}")
-
-    def exception(self, message):
-        super().exception(f"[{self.name}] {message}")
-
     def get_password(self, encrypted_password):
         """Decrypt and return the password"""
         cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
@@ -48,10 +27,6 @@ class DWHConnectorReader(DWHLoggerObject):
         """Open a new instance of the reader"""
         self.open()
 
-    def __exit__(self, *args):
-        """Close the instance of the reader"""
-        self.close()
-
     def open(self):
         self.info("Openning the reader ...")
 
@@ -62,6 +37,10 @@ class DWHConnectorReader(DWHLoggerObject):
     def close(self):
         self.info("Closing the reader ...")
 
+    def __exit__(self, *args):
+        """Close the instance of the reader"""
+        self.close()
+
     def __init__(self, name):
-        super().__init__()
+        super().__init__(name)
         self.__name = name

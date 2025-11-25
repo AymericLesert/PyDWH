@@ -30,13 +30,14 @@ def execute():
     # Exécute les règles de transformation de données pour chaque instance
 
     # Cas d'usage 1 :
-    #    1. Ouvrir un fichier CSV
-    #    2. Récupérer la structure du fichier CSV
+    #    1. Ouvrir une base de données source
+    #    2. Récupérer la structure (tables et champs)
     #    3. Appliquer les règles de transformation
     #    4. Ecrire un nouveau fichier CSV avec les données transformées
 
     for item in configuration.get('instances', []):
         with DWHInstance(item) as instance:
+            # Analyse technique de la source
             schema = instance.schema
 
     logger.close()
