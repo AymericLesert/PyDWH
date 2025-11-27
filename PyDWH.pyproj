@@ -49,8 +49,12 @@
     <Compile Include="src\logger\loggerobject.py" />
     <Compile Include="src\logger\loggertimer.py" />
     <Compile Include="src\logger\__init__.py" />
-    <Compile Include="src\rules\instance.py" />
-    <Compile Include="src\rules\__init__.py" />
+    <Compile Include="src\instance\instance.py" />
+    <Compile Include="src\instance\__init__.py" />
+    <Compile Include="src\rule\ruletechnicalignore.py" />
+    <Compile Include="src\rule\ruletechnical.py" />
+    <Compile Include="src\rule\rule.py" />
+    <Compile Include="src\rule\__init__.py" />
     <Compile Include="src\scripts\dwh_key_decrypt.py" />
     <Compile Include="src\scripts\dwh_key_encrypt.py" />
     <Compile Include="src\scripts\dwh_rules.py" />
@@ -88,7 +92,8 @@
     <Folder Include="src\connector\" />
     <Folder Include="src\connector\reader\" />
     <Folder Include="src\connector\writer\" />
-    <Folder Include="src\rules\" />
+    <Folder Include="src\instance\" />
+    <Folder Include="src\rule\" />
     <Folder Include="src\scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
