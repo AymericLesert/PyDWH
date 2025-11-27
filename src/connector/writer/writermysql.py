@@ -5,8 +5,6 @@
 This module handles the MySQL Writer.
 """
 
-from dotenv import load_dotenv
-
 from connector.writer.writer import DWHConnectorWriter
 
 class DWHConnectorWriterMySQL(DWHConnectorWriter):

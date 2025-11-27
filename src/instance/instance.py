@@ -12,7 +12,10 @@ from logger.loggerobject import DWHLoggerObject
 from connector.database.schema import DWHConnectorDatabaseSchema
 
 from connector.reader.readermysql import DWHConnectorReaderMySQL
+
 from connector.writer.writermysql import DWHConnectorWriterMySQL
+
+from rule.ruletechnicalignore import DWHRuleTechnicalIgnore
 
 class DWHInstance(DWHLoggerObject):
     @property
@@ -57,6 +60,10 @@ class DWHInstance(DWHLoggerObject):
         self.info(f"Schema contains {self.__schema.count_tables} tables and {self.__schema.count_fields} fields")
 
         return self.__schema
+
+    @property
+    def technical_rules(self):
+        return self.__technical_rules
 
     def get_rows(self):
         return {}
@@ -112,9 +119,21 @@ class DWHInstance(DWHLoggerObject):
                 try:
                     self.__targets.append(eval(target_cfg[target_name]['class'])(target_name, **target_cfg[target_name].get('parameters', {})))
                 except Exception as exc:
-                    self.exception("Exception on creating source")
+                    self.exception("Exception on creating target")
 
-        # TODO : Creation des règles
+        # Creation des règles techniques
+
+        self.info("Creating technical rules ...")
+        self.__technical_rules = []
+        for table_cfg in configuration.get('tables', []):
+            for table_name in table_cfg.keys():
+                self.info(f"Creating '{table_name}' ...")
+                try:
+                    self.__technical_rules.append(eval(table_cfg[table_name]['class'])(table_name, **table_cfg[table_name].get('parameters', {})))
+                except Exception as exc:
+                    self.exception("Exception on creating technical rule")
+
+        # TODO : Creation des règles métiers
 
         self.info("Creating rules ...")
         self.__rules = configuration.get('regles', [])
