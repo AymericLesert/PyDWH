@@ -15,13 +15,46 @@ from connector.reader.readermysql import DWHConnectorReaderMySQL
 
 from connector.writer.writermysql import DWHConnectorWriterMySQL
 
-from rule.ruletechnicalignore import DWHRuleTechnicalIgnore
+from rule.technical.ruletechnicalignore import DWHRuleTechnicalIgnore
+from rule.technical.ruletechnicalcountrow import DWHRuleTechnicalCountRow
 
 class DWHInstance(DWHLoggerObject):
     @property
     def name(self):
         """Get the name of the instance"""
         return self.__name
+
+    def __source_factory(self, name, configuration):
+        self.info(f"Declaring the source '{name}' ...")
+        try:
+            return eval(f"DWHConnectorReader{configuration['type']}")(**configuration)
+        except:
+            self.exception(f"Exception on declaring source '{name}'")
+        return None
+
+    def __table_factory(self, name, configuration):
+        self.info(f"Describing the table '{name}' ...")
+        return configuration.to_dict()
+
+    def __rule_factory(self, name, configuration):
+        self.info(f"Describing the rule '{name}' ...")
+        return configuration.to_dict()
+
+    def __rule_technical_factory(self, name, configuration):
+        self.info(f"Defining the technical rule '{name}' ...")
+        try:
+            return eval(f"DWHRuleTechnical{configuration['type']}")(name, **configuration)
+        except:
+            self.exception(f"Exception on defining the technical rule '{name}'")
+        return None
+
+    def __target_factory(self, name, configuration):
+        self.info(f"Declaring the target '{name}' ...")
+        try:
+            return eval(f"DWHConnectorWriter{configuration['type']}")(**configuration)
+        except:
+            self.exception(f"Exception on declaring target '{name}'")
+        return None
 
     def __enter__(self):
         """Open a new instance"""
@@ -34,45 +67,133 @@ class DWHInstance(DWHLoggerObject):
         for source in self.__sources:
             try:
                 source.open()
-            except Exception as exc:
+            except:
                 self.exception("Exception on openning source")
 
         for target in self.__targets:
             try:
                 target.open()
-            except Exception as exc:
+            except:
                 self.exception("Exception on openning target")
 
     @property
     def schema(self):
+        """Get the schema of the instance from configuration items"""
+
         if self.__schema is not None:
             return self.__schema
 
-        self.info("Extracting schema")
+        # Build the schema from the sources
+
+        self.info("Building schema from sources ...")
         self.__schema = DWHConnectorDatabaseSchema(self.name)
         
         for source in self.__sources:
+            self.info(f"Exracting schema from '{source.name}' ...")
             try:
                 self.__schema.append(source.schema)
             except:
-                self.exception("Exception on getting schema")
+                self.exception(f"Exception on extracting schema '{source.name}'")
 
         self.info(f"Schema contains {self.__schema.count_tables} tables and {self.__schema.count_fields} fields")
 
+        # Remove all tables not described into tables configuration
+
+        table_to_remove = []
+        for name in self.__schema.tables.keys():
+            if name in self.__tables:
+                continue
+
+            table_to_remove.append(name)
+
+        if len(table_to_remove) > 0:
+            self.warning("List of tables not described into the configuration :")
+            for name in table_to_remove:
+                self.warning(f"- '{name}'")
+                self.__schema.remove(name)
+
+        # Indicates all tables described which doesn't exist into schema
+
+        first = True
+        for name in self.__tables.keys():
+            if name in self.__schema.tables:
+                # Set the filter on table
+                self.__schema.tables[name].filter = self.__tables[name].get('filter', None)
+                continue
+            if first:
+                self.error("List of tables described into the configuration and it doesn't exist into the schema :")
+                first = False
+            self.error(f"- '{name}'")
+
+        # Check fields for existing tables ...
+
+        fields_removed = []
+        fields_unknwon = []
+        for table in self.__schema.tables.values():
+            fields = {}
+            for name in self.__tables[table.name].get('fields', []):
+                fields[name] = True
+
+            # Remove all fields not described into tables configuration
+
+            field_to_remove = []
+            for name in table.fields.keys():
+                if name in fields:
+                    continue
+                field_to_remove.append(name)
+
+            if len(field_to_remove) > 0:
+                for name in field_to_remove:
+                    table.remove(name)
+                    fields_removed.append(f"{table.name}.{name}")
+
+            # Indicates all fields described which doesn't exist into schema
+
+            for name in fields.keys():
+                if name in table.fields:
+                    continue
+                fields_unknwon.append(f"{table.name}.{name}")
+
+        if len(fields_removed) > 0:
+            self.warning("List of fields not described into the configuration :")
+            for name in fields_removed:
+                self.warning(f"- '{name}'")
+
+        if len(fields_unknwon) > 0:
+            self.error("List of fields described into the configuration and it doesn't exist into the schema :")
+            for name in fields_unknwon:
+                self.error(f"- '{name}'")
+
         return self.__schema
 
-    @property
-    def technical_rules(self):
-        return self.__technical_rules
+    def analyze(self, table_name):
+        if table_name not in self.__tables:
+            return False
 
-    def get_rows(self):
-        return {}
+        self.info(f"Analyzing table '{table_name}' ...")
 
-    def apply_rules(self, row):
-        return row
+        table = self.__tables[table_name]
 
-    def set_row(self, row):
-        pass
+        # apply rules on table and stop if one rule fails or has to be ignored
+
+        for rule_name, rule in table.get('rules', {}).items():
+            self.info(f"Executing rule '{rule_name}' on the table '{table_name}' ...")
+            new_rule = self.__rule_technical_factory(rule_name, rule)
+            if new_rule is None:
+                return False
+
+            if not new_rule.execute(self.__schema.tables[table_name]):
+                return False
+
+        # TODO : check keys
+
+        self.info("Checking keys ...")
+
+        # TODO : check foreigns keys
+
+        self.info("Checking foreign keys ...")
+
+        return True
 
     def close(self):
         self.info("Closing the instance ...")
@@ -80,7 +201,7 @@ class DWHInstance(DWHLoggerObject):
         for target in reversed(self.__targets):
             try:
                 target.close()
-            except Exception as exc:
+            except:
                 self.exception("Exception on closing target")
         
         for source in reversed(self.__sources):
@@ -97,45 +218,51 @@ class DWHInstance(DWHLoggerObject):
         self.__name = configuration.get('name', '')
         super().__init__(self.name)
 
+        # Initialisation des propriétés de l'instance
+
+        self.__schema = None
+        self.__sources = []
+        self.__tables = {}
+        self.__rules = []
+        self.__targets = []
+
         # Creation des sources
 
-        self.info("Creating sources ...")
-        self.__sources = []
-        for source_cfg in configuration.get('sources', []):
-            for source_name in source_cfg.keys():
-                self.info(f"Creating '{source_name}' ...")
-                try:
-                    self.__sources.append(eval(source_cfg[source_name]['class'])(source_name, **source_cfg[source_name].get('parameters', {})))
-                except Exception as exc:
-                    self.exception("Exception on creating source")
+        self.info("Declaring sources ...")
+        for configuration_source in configuration.get('sources', []):
+            name = configuration_source.get('name', '')
+            new_source = self.__source_factory(name, configuration_source)
+            if new_source is None:
+                continue
+            self.__sources.append(new_source)
+
+        # Déclaration des tables
+
+        self.info("Describing tables ...")
+        for configuration_table in configuration.get('tables', []):
+            name = configuration_table.get('name', '')
+            new_table = self.__table_factory(name, configuration_table)
+            if new_table is None:
+                continue
+            self.__tables[name] = new_table
+
+        # Déclaration des règles métiers
+
+        self.info("Describing rules ...")
+        for configuration_rule in configuration.get('rules', []):
+            name = configuration_rule.get('name', '')
+            new_rule = self.__rule_factory(name, configuration_rule)
+            if new_rule is None:
+                continue
+            self.__rules.append(new_rule)
 
         # Creation des destinations
 
-        self.info("Creating targets ...")
-        self.__targets = []
-        for target_cfg in configuration.get('destinations', []):
-            for target_name in target_cfg.keys():
-                self.info(f"Creating '{target_name}' ...")
-                try:
-                    self.__targets.append(eval(target_cfg[target_name]['class'])(target_name, **target_cfg[target_name].get('parameters', {})))
-                except Exception as exc:
-                    self.exception("Exception on creating target")
+        self.info("Declaring targets ...")
+        for configuration_target in configuration.get('targets', []):
+            name = configuration_target.get('name', '')
+            new_target = self.__target_factory(name, configuration_target)
+            if new_target is None:
+                continue
+            self.__targets.append(new_target)
 
-        # Creation des règles techniques
-
-        self.info("Creating technical rules ...")
-        self.__technical_rules = []
-        for table_cfg in configuration.get('tables', []):
-            for table_name in table_cfg.keys():
-                self.info(f"Creating '{table_name}' ...")
-                try:
-                    self.__technical_rules.append(eval(table_cfg[table_name]['class'])(table_name, **table_cfg[table_name].get('parameters', {})))
-                except Exception as exc:
-                    self.exception("Exception on creating technical rule")
-
-        # TODO : Creation des règles métiers
-
-        self.info("Creating rules ...")
-        self.__rules = configuration.get('regles', [])
-
-        self.__schema = None

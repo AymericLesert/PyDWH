@@ -31,13 +31,31 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         """Get the number of fields in the table"""
         return len(self.__fields)
 
-    def add_field(self, field_name, field_type):
+    @property
+    def filter(self):
+        return self.__filter
+
+    @filter.setter
+    def filter(self, filter):
+        self.__filter = filter
+
+    def add(self, field_name, field_type):
         if not field_name in self.__fields:
             self.__fields[field_name] = DWHConnectorDatabaseField(self, field_name, field_type)
         return self.__fields[field_name]
+
+    def remove(self, field_name):
+        if not field_name in self.__fields:
+            return
+        del self.__fields[field_name]
+
+    @property
+    def count_rows(self):
+        return self.connector.count_rows(self.name, self.filter)
 
     def __init__(self, connector, name):
         super().__init__(f"{connector.name}.{name}")
         self.__connector = connector
         self.__name = name
+        self.__filter = None
         self.__fields = {}

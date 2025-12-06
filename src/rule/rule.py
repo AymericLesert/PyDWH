@@ -20,7 +20,13 @@ class DWHRule(DWHLoggerObject):
         """Get the description of the rule"""
         return ""
 
+    @property
+    def ignore(self):
+        """Indicates if the rule has to be ignored"""
+        return False
+
     def execute(self, table):
+        """Define the rule checking values from a table"""
         return False
 
     def __init__(self, name):

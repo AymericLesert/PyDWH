@@ -24,7 +24,7 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
     @property
     def count_tables(self):
         """Get the number of tables in the schema"""
-        return len(self.__tables)   
+        return len(self.__tables)
 
     @property
     def count_fields(self):
@@ -44,7 +44,12 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
             new_table = DWHConnectorDatabaseTable(table.connector, table.name)
             self.__tables[new_table.name] = new_table
             for field_name, field in table.fields.items():
-                new_table.add_field(field_name, field.type)
+                new_table.add(field_name, field.type)
+
+    def remove(self, name):
+        if not name in self.__tables:
+            return
+        del self.__tables[name]
 
     def __init__(self, name):
         super().__init__(name)

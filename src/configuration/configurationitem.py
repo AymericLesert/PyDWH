@@ -79,9 +79,9 @@ class DWHConfigurationItem:
             ${PWD}/config => /home/developer/workspace/SDK/config
             ${ENV_NOT_FOUND?hello world}/config => hello world/config
             ${name} - ${version} => PySyncytium - v0.0.0.0
-            ${triggers.csv.filename} => fait référence au nom du fichier csv "filename" du trigger "csv"
-            ${triggers.${environment.name}.filename} => fait référence au nom du fichier csv "filename" du trigger
-            dont l'alias a la même valeur que le nom de l'environnement
+            ${triggers.csv.filename} => get the information from another part of the configuration file like "filename" of the trigger "csv"
+            ${triggers.${environment.name}.filename} => it's the same as before but replace "csv" by a given value
+            ${.item} => get the information from the previous node of configuration item
         """
 
         def replace_key(match):
@@ -115,12 +115,14 @@ class DWHConfigurationItem:
 
             # Check existing the configuration item
 
-            if key[0] == '.':
-                value = self.root.get(key[1:])
-            else:
-                value = self.get(key)
+            item = self
+            while key[0] == '.':
+                if not item.root is None:
+                    item = item.root
+                key = key[1:]
+            value = item.get(key)
             if value is not None:
-                return value
+                return str(value)
 
             # Check environment variable
 
@@ -132,8 +134,8 @@ class DWHConfigurationItem:
         if not isinstance(value, str):
             return value
 
-        # on autorise jusqu'à 5 référence de référence
-        # Exemple de référence de référence : ${parameters.${environment.name}.value}
+        # Allow until 5 references
+        # Sample : ${parameters.${environment.name}.value}
 
         try:
             i = 0
@@ -144,7 +146,7 @@ class DWHConfigurationItem:
                 change = value != previousvalue
                 i += 1
         except:
-            # ignore l'exception et retourne la valeur dans l'état où elle est ...
+            # do not take care about the exception ...
             pass
 
         return value
@@ -196,9 +198,9 @@ class DWHConfigurationItem:
                 key = key[0:-len(self.MASK_HIDDEN)]
                 masks.append(key)
             if isinstance(value, dict):
-                items[key] = DWHConfigurationItem(root, value)
+                items[key] = DWHConfigurationItem(self, value)
             elif isinstance(value, (list, tuple)):
-                items[key] = subitem(root, value)
+                items[key] = subitem(self, value)
             else:
                 items[key] = value
         self.__dict__["_DWHConfigurationItem__items"] = items

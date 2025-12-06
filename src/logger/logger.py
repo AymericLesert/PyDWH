@@ -12,6 +12,8 @@ import threading
 import re
 import traceback
 
+from tools.date import Date
+
 import logging
 import logging.config
 
@@ -158,7 +160,7 @@ class DWHLogger:
                 limitdate = datetime.datetime.now() + \
                             datetime.timedelta(seconds=-self.__configuration.items.logging.syncytium.cleanup.nbdays * 86400)
                 pattern = re.compile(self.__configuration.items.logging.syncytium.cleanup.pattern)
-                self.__logger.info("Cleaning up older file than %s ...", limitdate.strftime("%Y-%m-%d %H:%M:%S"))
+                self.__logger.info("Cleaning up older file than %s ...", limitdate.strftime(Date.DATETIME))
                 for file in glob.glob(os.path.join(os.getcwd(),
                                                    self.__configuration.items.logging.syncytium.cleanup.directory, '*')):
                     update_file = datetime.datetime.fromtimestamp(os.path.getmtime(file))

@@ -34,6 +34,9 @@ class DWHConnectorReader(DWHLoggerObject):
     def schema(self):
         return None
 
+    def count_rows(self, table_name, filter = None):
+        return 0
+
     def close(self):
         self.info("Closing the reader ...")
 
