@@ -31,6 +31,7 @@
     <Compile Include="src\configuration\configuration.py" />
     <Compile Include="src\configuration\configurationitem.py" />
     <Compile Include="src\configuration\__init__.py" />
+    <Compile Include="src\connector\database\record.py" />
     <Compile Include="src\connector\database\field.py" />
     <Compile Include="src\connector\database\table.py" />
     <Compile Include="src\connector\database\schema.py" />
@@ -40,6 +41,10 @@
     <Compile Include="src\connector\writer\__init__.py" />
     <Compile Include="src\connector\__init__.py" />
     <Compile Include="src\exception\exception.py" />
+    <Compile Include="src\exception\exceptionrule.py" />
+    <Compile Include="src\exception\exceptionrecordfieldnotfound.py" />
+    <Compile Include="src\exception\exceptionrecordfield.py" />
+    <Compile Include="src\exception\exceptionrecord.py" />
     <Compile Include="src\exception\exceptiondatabase.py" />
     <Compile Include="src\exception\exceptiondatabasenotconnected.py" />
     <Compile Include="src\exception\exceptiondatabaserequest.py" />
@@ -54,6 +59,9 @@
     <Compile Include="src\logger\__init__.py" />
     <Compile Include="src\instance\instance.py" />
     <Compile Include="src\instance\__init__.py" />
+    <Compile Include="src\rule\functional\rulefunctionalregex.py" />
+    <Compile Include="src\rule\functional\rulefunctionallistvalues.py" />
+    <Compile Include="src\rule\functional\rulefunctional.py" />
     <Compile Include="src\rule\functional\__init__.py" />
     <Compile Include="src\rule\technical\ruletechnicalcountrow.py" />
     <Compile Include="src\rule\technical\ruletechnicalignore.py" />

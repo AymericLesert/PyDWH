@@ -8,10 +8,40 @@ This module handles the MySQL Reader.
 import mysql.connector
 
 from connector.database.schema import DWHConnectorDatabaseSchema
+from connector.database.record import DWHConnectorDatabaseRecord
 
 from connector.reader.reader import DWHConnectorReader
 
 class DWHConnectorReaderMySQL(DWHConnectorReader):
+    class IteratorRecords:
+        def __next__(self):
+            self.__record.clear()
+            try:
+                row = self.__cursor.__next__()
+            except StopIteration:
+                self.__cursor.close()
+                raise
+
+            table = self.__record.get_table()
+            for i, field in enumerate(table.fields.values()):
+                if field.type is None:
+                    self.__record[field.name] = None
+                else:
+                    self.__record[field.name] = row[i]
+
+
+            return self.__record
+
+        def __init__(self, record, cursor):
+            self.__record = record
+            self.__cursor = cursor
+
+    def __execute(self, request):
+        self.verbose(f"Executing request: {request}")
+        cursor = self.__connexion.cursor()
+        cursor.execute(request)
+        return cursor
+
     def open(self):
         """Connect to the source"""
         super().open()
@@ -26,13 +56,12 @@ class DWHConnectorReaderMySQL(DWHConnectorReader):
     def schema(self):
         """Get the schema of the source"""
         schema = DWHConnectorDatabaseSchema(self.name)
-        cursor_table = self.__connexion.cursor()
-        cursor_table.execute("SHOW TABLES")
+
+        cursor_table = self.__execute("SHOW TABLES")
 
         for row in cursor_table.fetchall():
             table = schema.add_table(self, row[0])
-            cursor_column = self.__connexion.cursor()
-            cursor_column.execute(f"SHOW COLUMNS FROM `{table.name}`")
+            cursor_column = self.__execute(f"SHOW COLUMNS FROM `{table.name}`")
             for column in cursor_column.fetchall():
                 table.add(column[0], column[1])
             cursor_column.close()
@@ -42,14 +71,28 @@ class DWHConnectorReaderMySQL(DWHConnectorReader):
 
     def count_rows(self, table_name, filter = None):
         # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
-        cursor_table = self.__connexion.cursor()
         if filter is None:
-            cursor_table.execute(f"select count(*) from `{table_name}`")
+            cursor_table = self.__execute(f"select count(*) from `{table_name}`")
         else:
-            cursor_table.execute(f"select count(*) from `{table_name}` where {filter}")
+            cursor_table = self.__execute(f"select count(*) from `{table_name}` where {filter}")
         count_rows = cursor_table.fetchone()[0]
         cursor_table.close()
         return count_rows
+
+    def iterator(self, table):
+        """Iterator on the source (get the list of records from the table)"""
+        list_fields = ""
+        if len(table.fields.keys()) == 0:
+            list_fields = "*"
+        else:
+            list_fields = ', '.join([f"`{field.name}`" for field in table.fields.values() if field.type is not None])
+
+        if table.filter is None:
+            cursor = self.__execute(f"select {list_fields} from `{table.name}`")
+        else:
+            cursor = self.__execute(f"select {list_fields} from `{table.name}` where {table.filter}")
+
+        return DWHConnectorReaderMySQL.IteratorRecords(DWHConnectorDatabaseRecord(table), cursor)
 
     def close(self):
         """Close the connexion to the source"""

@@ -19,7 +19,15 @@ class DWHConfigurationItem:
     @property
     def root(self):
         """Retrieve the configuration root"""
-        return self.__root
+        node = self
+        while not node.parent is None:
+            node = node.parent
+        return node
+
+    @property
+    def parent(self):
+        """Retrieve the configuration parent"""
+        return self.__parent
 
     @property
     def items(self):
@@ -115,12 +123,12 @@ class DWHConfigurationItem:
 
             # Check existing the configuration item
 
-            item = self
+            node = self
             while key[0] == '.':
-                if not item.root is None:
-                    item = item.root
+                if not node.parent is None:
+                    node = node.parent
                 key = key[1:]
-            value = item.get(key)
+            value = node.get(key)
             if value is not None:
                 return str(value)
 
@@ -178,19 +186,19 @@ class DWHConfigurationItem:
                             return default_value
         return self.__evaluate(item)
 
-    def __init__(self, root, item):
-        def subitem(root, item):
+    def __init__(self, parent, item):
+        def subitem(parent, item):
             items = []
             for value in item:
                 if isinstance(value, (list, tuple)):
-                    items.append(subitem(root, value))
+                    items.append(subitem(parent, value))
                 elif isinstance(value, dict):
-                    items.append(DWHConfigurationItem(root, value))
+                    items.append(DWHConfigurationItem(parent, value))
                 else:
                     items.append(value)
             return items
 
-        self.__dict__["_DWHConfigurationItem__root"] = root
+        self.__dict__["_DWHConfigurationItem__parent"] = parent
         items = {}
         masks = []
         for key, value in item.items():

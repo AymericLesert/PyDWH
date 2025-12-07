@@ -39,7 +39,15 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def filter(self, filter):
         self.__filter = filter
 
-    def add(self, field_name, field_type):
+    @property
+    def from_tables(self):
+        return self.__from_tables
+
+    @from_tables.setter
+    def from_tables(self, from_tables):
+        self.__from_tables = from_tables
+
+    def add(self, field_name, field_type = None):
         if not field_name in self.__fields:
             self.__fields[field_name] = DWHConnectorDatabaseField(self, field_name, field_type)
         return self.__fields[field_name]
@@ -53,9 +61,14 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def count_rows(self):
         return self.connector.count_rows(self.name, self.filter)
 
+    def __iter__(self):
+        """Iterator on the records from the table"""
+        return self.connector.iterator(self)
+
     def __init__(self, connector, name):
         super().__init__(f"{connector.name}.{name}")
         self.__connector = connector
         self.__name = name
         self.__filter = None
         self.__fields = {}
+        self.__from_tables = None

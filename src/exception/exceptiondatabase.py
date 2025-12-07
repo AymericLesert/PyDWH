@@ -7,4 +7,4 @@ This module describes a database exception.
 from exception.exception import DWHException
 
 class DWHExceptionDatabase(DWHException):
-    """Basic database exception from the application Syncytium"""
+    """Basic database exception"""

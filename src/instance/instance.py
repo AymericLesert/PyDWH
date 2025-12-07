@@ -7,6 +7,7 @@ This module describes the list of instances.
 
 from turtle import isvisible
 from unittest.mock import seal
+from exception.exceptionrule import DWHExceptionRule
 from logger.loggerobject import DWHLoggerObject
 
 from connector.database.schema import DWHConnectorDatabaseSchema
@@ -17,6 +18,9 @@ from connector.writer.writermysql import DWHConnectorWriterMySQL
 
 from rule.technical.ruletechnicalignore import DWHRuleTechnicalIgnore
 from rule.technical.ruletechnicalcountrow import DWHRuleTechnicalCountRow
+
+from rule.functional.rulefunctionallistvalues import DWHRuleFunctionalListValues
+from rule.functional.rulefunctionalregex import DWHRuleFunctionalRegex
 
 class DWHInstance(DWHLoggerObject):
     @property
@@ -37,8 +41,12 @@ class DWHInstance(DWHLoggerObject):
         return configuration.to_dict()
 
     def __rule_factory(self, name, configuration):
-        self.info(f"Describing the rule '{name}' ...")
-        return configuration.to_dict()
+        self.info(f"Defining the functional rule '{name}' ...")
+        try:
+            return eval(f"DWHRuleFunctional{configuration['type']}")(**configuration)
+        except:
+            self.exception(f"Exception on defining the functional rule '{name}'")
+        return None
 
     def __rule_technical_factory(self, name, configuration):
         self.info(f"Defining the technical rule '{name}' ...")
@@ -49,12 +57,42 @@ class DWHInstance(DWHLoggerObject):
         return None
 
     def __target_factory(self, name, configuration):
+        # Initializing the target schema
+
+        self.info(f"Initializing the schema to the target '{name}' ...")
+        schema = DWHConnectorDatabaseSchema(configuration.get('database', name))
+
+        # Building the writer
+
         self.info(f"Declaring the target '{name}' ...")
+        connector = None
         try:
-            return eval(f"DWHConnectorWriter{configuration['type']}")(**configuration)
+            connector = eval(f"DWHConnectorWriter{configuration['type']}")(schema = schema, **configuration)
         except:
             self.exception(f"Exception on declaring target '{name}'")
-        return None
+            return None
+
+        # Building the schema to the target
+
+        self.info(f"Building the schema of the target '{name}' ...")
+
+        for table_cfg in configuration.get('tables', []):
+            # Creating the table into the schema
+
+            table_name = table_cfg.get('name', '')
+            self.info(f"Adding table '{table_name}' to the target schema ...")
+            table = schema.add_table(connector, table_name)
+            table.from_tables = table_cfg.get('from', [])
+
+            for field_name, field_cfg in table_cfg.to_dict().get('fields', {}).items():
+                # Creating the field into the table
+
+                field_type = field_cfg.get('type', 'string')
+                self.info(f"Adding field '{field_name}' of type '{field_type}' ...")
+                field = table.add(field_name, field_type)
+                field.from_fields = field_cfg.get('from', [])
+
+        return connector
 
     def __enter__(self):
         """Open a new instance"""
@@ -75,6 +113,8 @@ class DWHInstance(DWHLoggerObject):
                 target.open()
             except:
                 self.exception("Exception on openning target")
+
+        self.__reports = {}
 
     @property
     def schema(self):
@@ -154,6 +194,11 @@ class DWHInstance(DWHLoggerObject):
                     continue
                 fields_unknwon.append(f"{table.name}.{name}")
 
+            # Add extended fields
+
+            for name in self.__tables[table.name].get('extends', []):
+                table.add(name)
+
         if len(fields_removed) > 0:
             self.warning("List of fields not described into the configuration :")
             for name in fields_removed:
@@ -165,6 +210,15 @@ class DWHInstance(DWHLoggerObject):
                 self.error(f"- '{name}'")
 
         return self.__schema
+
+    def update(self):
+        self.verbose(f"Updating the instance ...")
+
+        for target in self.__targets:
+            try:
+                target.update()
+            except:
+                self.exception(f"Exception on updating record to target '{target.name}'")
 
     def analyze(self, table_name):
         if table_name not in self.__tables:
@@ -194,6 +248,38 @@ class DWHInstance(DWHLoggerObject):
         self.info("Checking foreign keys ...")
 
         return True
+
+    def apply(self, record):
+        valid = True
+
+        for rule in self.__rules:
+            try:
+                rule.execute(record)
+            except DWHExceptionRule as exception_rule:
+                if exception_rule.name not in self.__reports:
+                    self.__reports[exception_rule.name] = []
+                self.__reports[exception_rule.name].append(exception_rule)
+                valid = False
+            except:
+                self.exception(f"Exception on executing the rule '{rule.name}'")
+                valid = False
+
+        return valid
+
+    def write(self, record):
+        self.verbose(f"Writing the record '{record.to_dict()}' ...")
+
+        for target in self.__targets:
+            try:
+                target.write(record)
+            except:
+                self.exception(f"Exception on writing record to target '{target.name}'")
+
+    def reports(self):
+        for name, exceptions in self.__reports.items():
+            self.error(f"{name} not expected")
+            for exception in exceptions:
+                self.error(f"- {exception.record}")
 
     def close(self):
         self.info("Closing the instance ...")
@@ -225,6 +311,7 @@ class DWHInstance(DWHLoggerObject):
         self.__tables = {}
         self.__rules = []
         self.__targets = []
+        self.__reports = {}
 
         # Creation des sources
 

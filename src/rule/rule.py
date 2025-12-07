@@ -25,8 +25,8 @@ class DWHRule(DWHLoggerObject):
         """Indicates if the rule has to be ignored"""
         return False
 
-    def execute(self, table):
-        """Define the rule checking values from a table"""
+    def execute(self):
+        """Execute a technical or functional rule"""
         return False
 
     def __init__(self, name):
