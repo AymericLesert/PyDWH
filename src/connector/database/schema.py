@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -34,7 +34,7 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
             count += table.count_fields
         return count
 
-    def add_table(self, connector, table_name):
+    def add(self, connector, table_name):
         new_table = DWHConnectorDatabaseTable(connector, table_name)
         self.__tables[new_table.name] = new_table
         return new_table

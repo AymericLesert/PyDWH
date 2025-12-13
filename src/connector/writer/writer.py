@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -33,6 +33,11 @@ class DWHConnectorWriter(DWHLoggerObject):
         """Get the description of the target"""
         return { "name": self.name }
 
+    @property
+    def schema(self):
+        """Get the expected schema into the database"""
+        return self.__schema
+
     def __enter__(self):
         """Open a new instance of the writer"""
         self.open()
@@ -64,10 +69,9 @@ class DWHConnectorWriter(DWHLoggerObject):
                 value = field.default_value
 
                 for from_field in field.from_fields.get(from_table, []):
-                    if from_field in record.get_table().fields.keys():
+                    if from_field in record.get_table().fields or from_field in record.get_table().extends:
                         value = record[from_field]
                         break
-
                 new_record[field.name] = field.convert(value)
 
             self._write(new_record)

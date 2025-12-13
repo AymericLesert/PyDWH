@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -16,12 +16,16 @@ class DWHConnectorDatabaseRecord:
 
         field = self.__table.fields.get(field_name, None)
         if field is None:
+            field = self.__table.extends.get(field_name, None)
+        if field is None:
             return None
 
         return field.default_value
 
     def __setattr__(self, field_name, value):
         field = self.__table.fields.get(field_name, None)
+        if field is None:
+            field = self.__table.extends.get(field_name, None)
         if field is None:
             raise DWHExceptionRecordFieldNotFound(f"{self.__table.name}.{field_name}")
 
@@ -44,7 +48,10 @@ class DWHConnectorDatabaseRecord:
         """Clear the record"""
         record = self.__dict__["_DWHConnectorDatabaseRecord__record"]
         for key in list(record.keys()):
-            record[key] = self.__table.fields[key].default_value
+            field = self.__table.fields.get(key, None)
+            if field is None:
+                field = self.__table.extends.get(key, None)
+            record[key] = field.default_value
 
     def get_table(self):
         """Get the table of the record"""
@@ -53,8 +60,10 @@ class DWHConnectorDatabaseRecord:
     def to_dict(self):
         """Convert the record to a dictionary"""
         result = {}
-        for field_name in self.__table.fields.keys():
-            result[field_name] = self.__getattr__(field_name)
+        for name in self.__table.fields.keys():
+            result[name] = self.__getattr__(name)
+        for name in self.__table.extends.keys():
+            result[name] = self.__getattr__(name)
         return result
 
     def __init__(self, table):

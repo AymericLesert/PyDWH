@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -18,7 +18,11 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
         if record is None or record.get_table().name != self.table:
             return record
 
-        items = self.__regex.match(record[self.field])
+        value = record[self.field]
+        if value is None:
+            value = ""
+        items = self.__regex.match(value)
+
         if items is None:
             raise DWHExceptionRule(self, record)
 

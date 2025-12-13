@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -6,7 +6,14 @@ This module describes the schema structure.
 """
 
 from logger.loggerobject import DWHLoggerObject
+
 from connector.database.field import DWHConnectorDatabaseField
+from connector.database.fieldstring import DWHConnectorDatabaseFieldString
+from connector.database.fieldinteger import DWHConnectorDatabaseFieldInteger
+from connector.database.fielddouble import DWHConnectorDatabaseFieldDouble
+from connector.database.fieldboolean import DWHConnectorDatabaseFieldBoolean
+from connector.database.fielddate import DWHConnectorDatabaseFieldDate
+from connector.database.fielddatetime import DWHConnectorDatabaseFieldDateTime
 
 class DWHConnectorDatabaseTable(DWHLoggerObject):
     """This class defines a table containing Fields"""
@@ -25,6 +32,11 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def fields(self):
         """Get the fields of the table"""
         return self.__fields
+
+    @property
+    def extends(self):
+        """Get the extended fields of the table"""
+        return self.__extends
 
     @property
     def count_fields(self):
@@ -47,10 +59,35 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def from_tables(self, from_tables):
         self.__from_tables = from_tables
 
-    def add(self, field_name, field_type = None):
-        if not field_name in self.__fields:
-            self.__fields[field_name] = DWHConnectorDatabaseField(self, field_name, field_type)
-        return self.__fields[field_name]
+    def add(self, name, type = "String", length = None, decimal = None, is_null = True, default_value = None, **kwargs):
+        if not name in self.__fields:
+            try:
+                klass = eval(f"DWHConnectorDatabaseField{type}")
+            except:
+                self.error(f"Type '{type}' of the field '{name}' not implemented")
+                return None
+
+            self.__fields[name] = klass(self, name = name, 
+                                              length = length,
+                                              decimal = decimal, 
+                                              is_null = is_null,
+                                              default_value = default_value)
+        return self.__fields[name]
+
+    def extend(self, name, type = "String", length = None, decimal = None, is_null = True, default_value = None, **kwargs):
+        if not name in self.__fields:
+            try:
+                klass = eval(f"DWHConnectorDatabaseField{type}")
+            except:
+                self.error(f"Type '{type}' of the field '{name}' not implemented")
+                return None
+
+            self.__extends[name] = klass(self, name = name, 
+                                               length = length,
+                                               decimal = decimal, 
+                                               is_null = is_null,
+                                               default_value = default_value)
+        return self.__extends[name]
 
     def remove(self, field_name):
         if not field_name in self.__fields:
@@ -71,4 +108,5 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         self.__name = name
         self.__filter = None
         self.__fields = {}
+        self.__extends = {}
         self.__from_tables = None

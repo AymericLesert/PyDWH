@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -30,10 +30,22 @@ class DWHInstance(DWHLoggerObject):
 
     def __source_factory(self, name, configuration):
         self.info(f"Declaring the source '{name}' ...")
+
+        # Get the class of the source
+
         try:
-            return eval(f"DWHConnectorReader{configuration['type']}")(**configuration)
+            klass = eval(f"DWHConnectorReader{configuration['type']}")
+        except:
+            self.error(f"Type '{configuration['type']}' of the source '{name}' not implemented")
+            return None
+
+        # Initiate the source
+
+        try:
+            return klass(**configuration)
         except:
             self.exception(f"Exception on declaring source '{name}'")
+        
         return None
 
     def __table_factory(self, name, configuration):
@@ -42,18 +54,42 @@ class DWHInstance(DWHLoggerObject):
 
     def __rule_factory(self, name, configuration):
         self.info(f"Defining the functional rule '{name}' ...")
+
+        # Get the class of the source
+
         try:
-            return eval(f"DWHRuleFunctional{configuration['type']}")(**configuration)
+            klass = eval(f"DWHRuleFunctional{configuration['type']}")
+        except:
+            self.error(f"Nature '{configuration['type']}' of the rule '{name}' not implemented")
+            return None
+
+        # Initiate the rule
+
+        try:
+            return klass(**configuration)
         except:
             self.exception(f"Exception on defining the functional rule '{name}'")
+
         return None
 
     def __rule_technical_factory(self, name, configuration):
         self.info(f"Defining the technical rule '{name}' ...")
+
+        # Get the class of the source
+
         try:
-            return eval(f"DWHRuleTechnical{configuration['type']}")(name, **configuration)
+            klass = eval(f"DWHRuleTechnical{configuration['type']}")
         except:
-            self.exception(f"Exception on defining the technical rule '{name}'")
+            self.error(f"Nature '{configuration['type']}' of the technical rule '{name}' not implemented")
+            return None
+
+        # Initiate the rule
+
+        try:
+            return klass(name, **configuration)
+        except:
+            self.exception(f"Exception on defining the functional rule '{name}'")
+
         return None
 
     def __target_factory(self, name, configuration):
@@ -66,8 +102,19 @@ class DWHInstance(DWHLoggerObject):
 
         self.info(f"Declaring the target '{name}' ...")
         connector = None
+
+        # Get the class of the source
+
         try:
-            connector = eval(f"DWHConnectorWriter{configuration['type']}")(schema = schema, **configuration)
+            klass = eval(f"DWHConnectorWriter{configuration['type']}")
+        except:
+            self.error(f"Type '{configuration['type']}' of the target '{name}' not implemented")
+            return None
+
+        # Initiate the source
+
+        try:
+            connector = klass(schema = schema, **configuration)
         except:
             self.exception(f"Exception on declaring target '{name}'")
             return None
@@ -81,16 +128,19 @@ class DWHInstance(DWHLoggerObject):
 
             table_name = table_cfg.get('name', '')
             self.info(f"Adding table '{table_name}' to the target schema ...")
-            table = schema.add_table(connector, table_name)
+
+            table = schema.add(connector, table_name)
             table.from_tables = table_cfg.get('from', [])
 
             for field_name, field_cfg in table_cfg.to_dict().get('fields', {}).items():
                 # Creating the field into the table
-
-                field_type = field_cfg.get('type', 'string')
-                self.info(f"Adding field '{field_name}' of type '{field_type}' ...")
-                field = table.add(field_name, field_type)
-                field.from_fields = field_cfg.get('from', [])
+                try:
+                    self.info(f"Adding field '{field_name}' ...")
+                    field = table.add(name = field_name, **field_cfg)
+                    if field is not None:
+                        field.from_fields = field_cfg.get('from', [])
+                except:
+                    self.exception(f"Unable to add field '{field_name}'")
 
         return connector
 
@@ -197,7 +247,10 @@ class DWHInstance(DWHLoggerObject):
             # Add extended fields
 
             for name in self.__tables[table.name].get('extends', []):
-                table.add(name)
+                try:
+                    table.extend(name)
+                except:
+                    self.exception(f"Unable to add an extended field '{table.name}.{name}'")
 
         if len(fields_removed) > 0:
             self.warning("List of fields not described into the configuration :")

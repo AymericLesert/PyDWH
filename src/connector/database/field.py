@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
 This module describes the schema structure.
 """
+
+import datetime
 
 from logger.loggerobject import DWHLoggerObject
 
@@ -23,7 +25,12 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
     @property
     def type(self):
         """Get the type of the field"""
-        return self.__type
+        return None
+
+    @property
+    def is_null(self):
+        """Get the null possible value of the field"""
+        return self.__is_null
 
     @property
     def default_value(self):
@@ -49,10 +56,33 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
         # TODO: improve type conversion
         return value
 
-    def __init__(self, table, field_name, field_type):
-        super().__init__(f"{table.connector.name}.{table.name}.{field_name}")
+    def to_mysql(self, type_mysql):
+        default_value = ""
+        if not self.default_value is None:
+            if isinstance(self.default_value, int):
+                default_value = f" DEFAULT {self.default_value}"
+            elif isinstance(self.default_value, bool):
+                if self.default_value:
+                    default_value = " DEFAULT 1"
+                else:
+                    default_value = " DEFAULT 0"
+            elif isinstance(self.default_value, float):
+                default_value = f" DEFAULT {self.default_value}"
+            elif isinstance(self.default_value, datetime.datetime):
+                default_value = f" DEFAULT {self.default_value}"
+            else:
+                default_value = f" DEFAULT '{self.default_value}'"
+
+        not_null = ""
+        if not self.is_null:
+            not_null = " NOT NULL"
+
+        return f"`{self.name}` {type_mysql}{default_value}{not_null}"
+
+    def __init__(self, table, name, is_null, default_value):
+        super().__init__(f"{table.connector.name}.{table.name}.{name}")
         self.__table = table
-        self.__name = field_name
-        self.__type = field_type
-        self.__default_value = None
+        self.__name = name
+        self.__is_null = is_null
+        self.__default_value = default_value
         self.__from_field = {}

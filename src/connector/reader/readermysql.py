@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -13,6 +13,19 @@ from connector.database.record import DWHConnectorDatabaseRecord
 from connector.reader.reader import DWHConnectorReader
 
 class DWHConnectorReaderMySQL(DWHConnectorReader):
+
+    MAP_TYPE = {
+        'int': 'Integer',
+        'varchar': 'String',
+        'text': 'String',
+        'blob': 'String',
+        'decimal': 'Double',
+        'tinyint': 'Integer',
+        'bigint unsigned': 'Integer',
+        'date': 'Date',
+        'datetime': 'DateTime',
+    }
+
     class IteratorRecords:
         def __next__(self):
             self.__record.clear()
@@ -55,15 +68,33 @@ class DWHConnectorReaderMySQL(DWHConnectorReader):
     @property
     def schema(self):
         """Get the schema of the source"""
+
         schema = DWHConnectorDatabaseSchema(self.name)
 
         cursor_table = self.__execute("SHOW TABLES")
 
         for row in cursor_table.fetchall():
-            table = schema.add_table(self, row[0])
+            table = schema.add(self, row[0])
             cursor_column = self.__execute(f"SHOW COLUMNS FROM `{table.name}`")
+
             for column in cursor_column.fetchall():
-                table.add(column[0], column[1])
+                # Get the type (length1, length2)
+                items = column[1].replace('(', ',').replace(')', '').split(',')
+
+                # Check if the type exists and assigns it to the standard type
+                if items[0] not in DWHConnectorReaderMySQL.MAP_TYPE:
+                    self.error(f"Type ({items[0]}) of '{table.name}.{column[0]}' not implemented !")
+                    continue
+
+                # Add default values
+                items.extend([0,0])
+                table.add(name = column[0], 
+                          type = DWHConnectorReaderMySQL.MAP_TYPE[items[0]], 
+                          length = items[1], 
+                          decimal = items[2], 
+                          is_null = column[2],
+                          default_value = column[4])
+
             cursor_column.close()
 
         cursor_table.close()
