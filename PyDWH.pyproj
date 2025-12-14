@@ -42,6 +42,9 @@
     <Compile Include="src\connector\database\table.py" />
     <Compile Include="src\connector\database\schema.py" />
     <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\engine\enginemysql.py" />
+    <Compile Include="src\connector\engine\engine.py" />
+    <Compile Include="src\connector\engine\__init__.py" />
     <Compile Include="src\connector\writer\writermysql.py" />
     <Compile Include="src\connector\writer\writer.py" />
     <Compile Include="src\connector\writer\__init__.py" />
@@ -97,6 +100,7 @@
   <ItemGroup>
     <Folder Include="src\configuration\" />
     <Folder Include="src\connector\database\" />
+    <Folder Include="src\connector\engine\" />
     <Folder Include="src\logger\" />
     <Folder Include="src\exception\" />
     <Folder Include="src\" />

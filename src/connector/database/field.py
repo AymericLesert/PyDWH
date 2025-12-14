@@ -12,6 +12,8 @@ from logger.loggerobject import DWHLoggerObject
 class DWHConnectorDatabaseField(DWHLoggerObject):
     """This class defines a field"""
 
+    ALL_TABLES = "*"
+
     @property
     def table(self):
         """Get the table of the field"""
@@ -30,6 +32,8 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
     @property
     def is_null(self):
         """Get the null possible value of the field"""
+        if self.__name in self.__table.keys:
+            return False
         return self.__is_null
 
     @property
@@ -43,13 +47,15 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
 
     @from_fields.setter
     def from_fields(self, from_fields):
-        self.__from_fields = {}
+        self.__from_fields = []
 
         for field in from_fields:
-            table_name, field_name = field.split('.', 1)
-            if table_name not in self.__from_fields:
-                self.__from_fields[table_name] = []
-            self.__from_fields[table_name].append(field_name)
+            if '.' in field:
+                table_name, field_name = field.split('.', 1)
+            else:
+                table_name= DWHConnectorDatabaseField.ALL_TABLES
+                field_name = field
+            self.__from_fields.append((table_name, field_name))
 
     def convert(self, value):
         """Convert the value to the field type"""

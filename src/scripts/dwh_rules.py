@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=ungrouped-imports
 
 import argparse
@@ -51,6 +51,10 @@ def execute():
                     # apply rules on record (check and transform)
                     if instance.apply(record):
                         instance.write(record)
+
+                # Commit all records updated
+
+                instance.commit()
 
             # Create reports from exceptions identified while reading, checking and transforming records
             

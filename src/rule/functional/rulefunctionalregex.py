@@ -15,8 +15,8 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
     """This class defines a rule checking a regular expression and convert a part of values"""
 
     def execute(self, record):
-        if record is None or record.get_table().name != self.table:
-            return record
+        if super().execute(record) is None:
+            return None
 
         value = record[self.field]
         if value is None:
@@ -47,7 +47,7 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
 
         return record
 
-    def __init__(self, name, field, regex, description = "", values = {}, **kwargs):
-        super().__init__(name, field, description)
+    def __init__(self, name, table, field, regex, description = "", values = {}, **kwargs):
+        super().__init__(name, table, field, description)
         self.__regex = re.compile(regex)
         self.__values = values.to_dict()

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -53,7 +53,7 @@ class DWHConfigurationItem:
 
         items = {}
         for key, value in self.__items.items():
-            if not key in self.__masks:
+            if key not in self.__masks:
                 if isinstance(value, (list, tuple)):
                     items[key] = subitem(value)
                 elif isinstance(value, DWHConfigurationItem):

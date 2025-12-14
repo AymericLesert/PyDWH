@@ -16,6 +16,13 @@ class DWHConnectorDatabaseFieldString(DWHConnectorDatabaseField):
         return "String"
 
     @property
+    def default_value(self):
+        """Get the default value of the field"""
+        if not super().is_null and super().default_value is None:
+            return ""
+        return super().default_value
+
+    @property
     def length(self):
         """Get the max length of the field"""
         return self.__length
@@ -29,7 +36,5 @@ class DWHConnectorDatabaseFieldString(DWHConnectorDatabaseField):
         return value
 
     def __init__(self, table, name, length = 0, is_null = True, default_value = None, **kwargs):
-        if not is_null and default_value is None:
-            default_value = ""
         super().__init__(table, name, is_null, default_value)
         self.__length = length

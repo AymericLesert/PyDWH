@@ -66,6 +66,14 @@ class DWHConnectorDatabaseRecord:
             result[name] = self.__getattr__(name)
         return result
 
+    def to_list(self):
+        result = [self.__getattr__(name) for name in self.__table.fields]
+        result.extend([self.__getattr__(name) for name in self.__table.extends])
+        return result
+
+    def to_keys(self):
+        return [self.__getattr__(name) for name in self.__table.keys]
+
     def __init__(self, table):
         self.__dict__["_DWHConnectorDatabaseRecord__table"] = table
         self.__dict__["_DWHConnectorDatabaseRecord__record"] = {}

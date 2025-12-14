@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -13,14 +13,14 @@ class DWHRuleFunctionalListValues(DWHRuleFunctional):
     """This class defines a rule checking if a value is included into the list of values"""
 
     def execute(self, record):
-        if record is None or record.get_table().name != self.table:
-            return record
+        if super().execute(record) is None:
+            return None
 
-        if not record[self.field] in self.__values:
+        if record[self.field] not in self.__values:
             raise DWHExceptionRule(self, record)
 
         return record
 
-    def __init__(self, name, field, description = "", values = [], **kwargs):
-        super().__init__(name, field, description)
+    def __init__(self, name, table, field, description = "", values = [], **kwargs):
+        super().__init__(name, table, field, description)
         self.__values = values

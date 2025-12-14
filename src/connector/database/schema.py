@@ -34,10 +34,9 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
             count += table.count_fields
         return count
 
-    def add(self, connector, table_name):
-        new_table = DWHConnectorDatabaseTable(connector, table_name)
-        self.__tables[new_table.name] = new_table
-        return new_table
+    def add(self, table):
+        self.__tables[table.name] = table
+        return table
 
     def append(self, schema):
         for table in schema.tables.values():
@@ -47,7 +46,7 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
                 new_table.add(field_name, field.type)
 
     def remove(self, name):
-        if not name in self.__tables:
+        if name not in self.__tables:
             return
         del self.__tables[name]
 

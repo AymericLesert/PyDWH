@@ -11,6 +11,7 @@ from exception.exceptionrule import DWHExceptionRule
 from logger.loggerobject import DWHLoggerObject
 
 from connector.database.schema import DWHConnectorDatabaseSchema
+from connector.database.table import DWHConnectorDatabaseTable
 
 from connector.reader.readermysql import DWHConnectorReaderMySQL
 
@@ -52,26 +53,6 @@ class DWHInstance(DWHLoggerObject):
         self.info(f"Describing the table '{name}' ...")
         return configuration.to_dict()
 
-    def __rule_factory(self, name, configuration):
-        self.info(f"Defining the functional rule '{name}' ...")
-
-        # Get the class of the source
-
-        try:
-            klass = eval(f"DWHRuleFunctional{configuration['type']}")
-        except:
-            self.error(f"Nature '{configuration['type']}' of the rule '{name}' not implemented")
-            return None
-
-        # Initiate the rule
-
-        try:
-            return klass(**configuration)
-        except:
-            self.exception(f"Exception on defining the functional rule '{name}'")
-
-        return None
-
     def __rule_technical_factory(self, name, configuration):
         self.info(f"Defining the technical rule '{name}' ...")
 
@@ -87,6 +68,26 @@ class DWHInstance(DWHLoggerObject):
 
         try:
             return klass(name, **configuration)
+        except:
+            self.exception(f"Exception on defining the functional rule '{name}'")
+
+        return None
+
+    def __rule_factory(self, name, configuration):
+        self.info(f"Defining the functional rule '{name}' ...")
+
+        # Get the class of the source
+
+        try:
+            klass = eval(f"DWHRuleFunctional{configuration['type']}")
+        except:
+            self.error(f"Nature '{configuration['type']}' of the rule '{name}' not implemented")
+            return None
+
+        # Initiate the rule
+
+        try:
+            return klass(**configuration)
         except:
             self.exception(f"Exception on defining the functional rule '{name}'")
 
@@ -129,8 +130,10 @@ class DWHInstance(DWHLoggerObject):
             table_name = table_cfg.get('name', '')
             self.info(f"Adding table '{table_name}' to the target schema ...")
 
-            table = schema.add(connector, table_name)
+            table = schema.add(DWHConnectorDatabaseTable(connector, table_name))
             table.from_tables = table_cfg.get('from', [])
+
+            # Defining the structure of the table
 
             for field_name, field_cfg in table_cfg.to_dict().get('fields', {}).items():
                 # Creating the field into the table
@@ -138,9 +141,20 @@ class DWHInstance(DWHLoggerObject):
                     self.info(f"Adding field '{field_name}' ...")
                     field = table.add(name = field_name, **field_cfg)
                     if field is not None:
-                        field.from_fields = field_cfg.get('from', [])
+                        field.from_fields = field_cfg.get('from', [field_name])
                 except:
                     self.exception(f"Unable to add field '{field_name}'")
+            
+            # Set the keys
+
+            key_to_remove = [name for name in table_cfg.get('keys', table.fields.keys()) if name not in table.fields]
+            if len(key_to_remove) > 0:
+                self.warning("List of keys not described into the configuration :")
+                for name in key_to_remove:
+                    self.warning(f"- '{name}'")
+            table.keys = [name for name in table_cfg.get('keys', table.fields.keys()) if name in table.fields]
+
+            # TODO : Define the foreign keys
 
         return connector
 
@@ -189,13 +203,7 @@ class DWHInstance(DWHLoggerObject):
 
         # Remove all tables not described into tables configuration
 
-        table_to_remove = []
-        for name in self.__schema.tables.keys():
-            if name in self.__tables:
-                continue
-
-            table_to_remove.append(name)
-
+        table_to_remove = [name for name in self.__schema.tables if name not in self.__tables]
         if len(table_to_remove) > 0:
             self.warning("List of tables not described into the configuration :")
             for name in table_to_remove:
@@ -205,15 +213,32 @@ class DWHInstance(DWHLoggerObject):
         # Indicates all tables described which doesn't exist into schema
 
         first = True
-        for name in self.__tables.keys():
-            if name in self.__schema.tables:
-                # Set the filter on table
-                self.__schema.tables[name].filter = self.__tables[name].get('filter', None)
+        for name, cfg in self.__tables.items():
+            # Check if the table from configuration exists into the source
+
+            if name not in self.__schema.tables:
+                if first:
+                    self.error("List of tables described into the configuration and it doesn't exist into the schema :")
+                    first = False
+                self.error(f"- '{name}'")
                 continue
-            if first:
-                self.error("List of tables described into the configuration and it doesn't exist into the schema :")
-                first = False
-            self.error(f"- '{name}'")
+
+            table = self.__schema.tables[name]
+
+            # Set the filter on table
+
+            table.filter = cfg.get('filter', None)
+
+            # Set the list of keys
+
+            key_to_remove = [name for name in cfg.get('keys', []) if name not in table.fields]
+            if len(key_to_remove) > 0:
+                self.warning("List of keys not described into the configuration :")
+                for name in key_to_remove:
+                    self.warning(f"- '{name}'")
+            table.keys = [name for name in cfg.get('keys', []) if name not in key_to_remove]
+
+            # TODO : Set the list of foreigns keys
 
         # Check fields for existing tables ...
 
@@ -226,11 +251,7 @@ class DWHInstance(DWHLoggerObject):
 
             # Remove all fields not described into tables configuration
 
-            field_to_remove = []
-            for name in table.fields.keys():
-                if name in fields:
-                    continue
-                field_to_remove.append(name)
+            field_to_remove = [name for name in table.fields if name not in fields]
 
             if len(field_to_remove) > 0:
                 for name in field_to_remove:
@@ -239,10 +260,7 @@ class DWHInstance(DWHLoggerObject):
 
             # Indicates all fields described which doesn't exist into schema
 
-            for name in fields.keys():
-                if name in table.fields:
-                    continue
-                fields_unknwon.append(f"{table.name}.{name}")
+            fields_unknwon.extend([f"{table.name}.{name}" for name in fields if not name in table.fields])
 
             # Add extended fields
 
@@ -279,18 +297,7 @@ class DWHInstance(DWHLoggerObject):
 
         self.info(f"Analyzing table '{table_name}' ...")
 
-        table = self.__tables[table_name]
-
-        # apply rules on table and stop if one rule fails or has to be ignored
-
-        for rule_name, rule in table.get('rules', {}).items():
-            self.info(f"Executing rule '{rule_name}' on the table '{table_name}' ...")
-            new_rule = self.__rule_technical_factory(rule_name, rule)
-            if new_rule is None:
-                return False
-
-            if not new_rule.execute(self.__schema.tables[table_name]):
-                return False
+        table = self.__schema.tables[table_name]
 
         # TODO : check keys
 
@@ -299,6 +306,20 @@ class DWHInstance(DWHLoggerObject):
         # TODO : check foreigns keys
 
         self.info("Checking foreign keys ...")
+
+        # apply rules on table and stop if one rule fails or has to be ignored
+
+        self.info("Checking rules ...")
+
+        table_cfg = self.__tables[table_name]
+        for rule_name, rule in table_cfg.get('rules', {}).items():
+            self.info(f"Executing rule '{rule_name}' on the table '{table_name}' ...")
+            new_rule = self.__rule_technical_factory(rule_name, rule)
+            if new_rule is None:
+                return False
+
+            if not new_rule.execute(table):
+                return False
 
         return True
 
@@ -327,6 +348,15 @@ class DWHInstance(DWHLoggerObject):
                 target.write(record)
             except:
                 self.exception(f"Exception on writing record to target '{target.name}'")
+
+    def commit(self):
+        self.info(f"Committing all updated records ...")
+
+        for target in self.__targets:
+            try:
+                target.commit()
+            except:
+                self.exception(f"Exception on committing record to target '{target.name}'")
 
     def reports(self):
         for name, exceptions in self.__reports.items():

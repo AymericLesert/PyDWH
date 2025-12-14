@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -128,7 +128,7 @@ class DWHLogger:
 
                 for handler in self.__logger.handlers:
                     if isinstance(handler, logging.FileHandler):
-                        if not handler.name in self.__files:
+                        if handler.name not in self.__files:
                             continue
 
                         newfilename = self.__configuration.items.logging.handlers[handler.name].filename

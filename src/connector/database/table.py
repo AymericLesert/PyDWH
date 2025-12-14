@@ -44,6 +44,14 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         return len(self.__fields)
 
     @property
+    def keys(self):
+        return self.__keys
+
+    @keys.setter
+    def keys(self, keys):
+        self.__keys = keys
+
+    @property
     def filter(self):
         return self.__filter
 
@@ -60,7 +68,7 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         self.__from_tables = from_tables
 
     def add(self, name, type = "String", length = None, decimal = None, is_null = True, default_value = None, **kwargs):
-        if not name in self.__fields:
+        if name not in self.__fields:
             try:
                 klass = eval(f"DWHConnectorDatabaseField{type}")
             except:
@@ -75,7 +83,7 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         return self.__fields[name]
 
     def extend(self, name, type = "String", length = None, decimal = None, is_null = True, default_value = None, **kwargs):
-        if not name in self.__fields:
+        if name not in self.__fields:
             try:
                 klass = eval(f"DWHConnectorDatabaseField{type}")
             except:
@@ -90,7 +98,7 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         return self.__extends[name]
 
     def remove(self, field_name):
-        if not field_name in self.__fields:
+        if field_name not in self.__fields:
             return
         del self.__fields[field_name]
 
@@ -98,9 +106,23 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def count_rows(self):
         return self.connector.count_rows(self.name, self.filter)
 
+    def clear(self):
+        self.__rows.clear()
+
+    def store(self, record):
+        if record is None:
+            return
+
+        self.__ids.append(record.to_keys())
+        self.__rows.append(record.to_list())
+
+    @property
+    def rows(self):
+        return self.__ids, self.__rows
+
     def __iter__(self):
         """Iterator on the records from the table"""
-        return self.connector.iterator(self)
+        return self.connector.read(self)
 
     def __init__(self, connector, name):
         super().__init__(f"{connector.name}.{name}")
@@ -109,4 +131,8 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         self.__filter = None
         self.__fields = {}
         self.__extends = {}
+        self.__keys = []
+
         self.__from_tables = None
+        self.__ids = []
+        self.__rows = []

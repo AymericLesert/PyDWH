@@ -8,15 +8,14 @@ This module describes the loader component.
 import os
 
 from cryptography.fernet import Fernet
-from connector.database.record import DWHConnectorDatabaseRecord
 from logger.loggerobject import DWHLoggerObject
+
+from connector.database.field import DWHConnectorDatabaseField
+
+from connector.database.record import DWHConnectorDatabaseRecord
 
 class DWHConnectorWriter(DWHLoggerObject):
     """This class defines an abstract writer"""
-
-    DWH_ACTION_ADD = 1
-    DWH_ACTION_UPDATE = 2
-    DWH_ACTION_REMOVE = 3
 
     def get_password(self, encrypted_password):
         """Decrypt and return the password"""
@@ -45,36 +44,65 @@ class DWHConnectorWriter(DWHLoggerObject):
     def open(self):
         self.info(f"Openning the writer ...")
 
-    def update(self):
+    def update(self, engine):
         self.info(f"Updating the writer ...")
 
-    def _write(self, record):
-        """Write the record into the target (abstract)"""
+        #  Retrieve the list of tables into the database
+
+        existing_tables = engine.get_tables()
+        self.info(existing_tables)
+
+        # Create the standard DWH tables
+
+        if "DWHAction" not in existing_tables:
+            engine.create_dwh()
+
+        # Create tables into the schema on depends on the description from the configuration file
+
+        for table in [table for table in self.schema.tables.values() if table.name not in existing_tables]:
+            engine.create_table(table)
+
+        # Update table into the schema on depends on the description from the configuration file if somtehing changes
+
+        for table in [table for table in self.schema.tables.values() if table.name in existing_tables]:
+            engine.update_table(table)
+
+    def _write(self, table):
+        """Write the records from a table into the target (abstract)"""
         pass
 
     def write(self, record):
         if self.__schema is None or record is None:
             return
 
-        # Write the record into the target
+        # Store the record into the target
 
-        from_table = record.get_table().name
+        from_table = record.get_table()
 
         for table in self.__schema.tables.values():
-            if from_table not in table.from_tables:
+            if from_table.name not in table.from_tables:
                 continue
 
             new_record = DWHConnectorDatabaseRecord(table)
             for field in table.fields.values():
                 value = field.default_value
 
-                for from_field in field.from_fields.get(from_table, []):
-                    if from_field in record.get_table().fields or from_field in record.get_table().extends:
-                        value = record[from_field]
+                for from_table_name, from_field_name in field.from_fields:
+                    if (from_table_name == from_table.name or from_table_name == DWHConnectorDatabaseField.ALL_TABLES) and \
+                       (from_field_name in from_table.fields or from_field_name in from_table.extends):
+                        value = record[from_field_name]
                         break
+
                 new_record[field.name] = field.convert(value)
 
-            self._write(new_record)
+            table.store(new_record)
+
+    def commit(self):
+        self.info(f"Committing the writer ...")
+
+        for table in self.__schema.tables.values():
+            self._write(table)
+            table.clear()
 
     def close(self):
         self.info(f"Closing the writer ...")
@@ -87,3 +115,4 @@ class DWHConnectorWriter(DWHLoggerObject):
         super().__init__(name)
         self.__name = name
         self.__schema = schema
+        self.__data = {}

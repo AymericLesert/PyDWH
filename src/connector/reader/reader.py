@@ -1,22 +1,16 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
 This module describes the reader component.
 """
 
-import os
-
-from cryptography.fernet import Fernet
 from logger.loggerobject import DWHLoggerObject
+
+from connector.database.schema import DWHConnectorDatabaseSchema
 
 class DWHConnectorReader(DWHLoggerObject):
     """This class defines an abstract reader"""
-
-    def get_password(self, encrypted_password):
-        """Decrypt and return the password"""
-        cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
-        return cipher_suite.decrypt(bytes(encrypted_password, 'utf-8')).decode('utf-8')
 
     @property
     def name(self):
@@ -32,7 +26,7 @@ class DWHConnectorReader(DWHLoggerObject):
 
     @property
     def schema(self):
-        return None
+        return DWHConnectorDatabaseSchema(self.name)
 
     def count_rows(self, table_name, filter = None):
         return 0
