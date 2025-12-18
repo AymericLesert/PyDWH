@@ -16,7 +16,7 @@ class DWHRuleFunctionalListValues(DWHRuleFunctional):
         if super().execute(record) is None:
             return None
 
-        if record[self.field] not in self.__values:
+        if record[self.field].strip() not in self.__values:
             raise DWHExceptionRule(self, record)
 
         return record

@@ -13,6 +13,7 @@ from instance.instance import DWHInstance
 def execute():
     parser = argparse.ArgumentParser(description="Execution des règles d'enrichissement de l'entrepot")
     parser.add_argument('--config', type=str, required=True, help="Fichier de configuration")
+    parser.add_argument('--instance', type=str, required=False, help="Nom de l'instance à exécuter")
     args = parser.parse_args()
 
     Date.NOW = datetime.datetime.now()
@@ -31,6 +32,9 @@ def execute():
     logger.open()
 
     for item in configuration.get('instances', []):
+        if args.instance is not None and item.get('name', '') != args.instance:
+            continue
+
         with DWHInstance(item) as instance:
 
             # Update tables into the target

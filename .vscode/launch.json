@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}${pathSeparator}src${env:PYTHONPATH}"
+            },
+            "name": "Python Debugger: dwh_rules",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/scripts/dwh_rules.py",
+            "console": "integratedTerminal",
+            "args": "--config ../PyDWHConfig/config.yml --instance DOSFAB"
+        }
+    ]
+}

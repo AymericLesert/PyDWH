@@ -18,6 +18,9 @@ class DWHConnectorDatabaseFieldDouble(DWHConnectorDatabaseField):
     def to_mysql(self):
         return super().to_mysql(f"decimal({self.length+self.decimal},{self.decimal})")
 
+    def to_SQLServer(self):
+        return super().to_SQLServer(f"decimal({self.length+self.decimal},{self.decimal})")
+
     def convert(self, value):
         """Convert the value to the field type"""
         # TODO: improve type conversion

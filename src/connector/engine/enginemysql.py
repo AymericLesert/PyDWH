@@ -66,6 +66,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
             self.__connexion = None
 
     def create_dwh(self):
+        if self.__connexion is None:
+            return
+
         super().create_dwh()
 
         request = f"""CREATE TABLE `DWHAction` (
@@ -82,6 +85,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
         self.commit()
 
     def create_table(self, table):
+        if self.__connexion is None:
+            return
+
         super().create_table(table)
 
         primary_key = ""
@@ -96,6 +102,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
         self.execute(request).close()
 
     def update_table(self, table):
+        if self.__connexion is None:
+            return
+
         super().update_table(table)
 
         self.__dwh = True
@@ -128,16 +137,25 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
             self.execute(f"ALTER TABLE `{table.name}` ADD PRIMARY KEY ({', '.join([f"`{key}`" for key in primary_key])})").close()
 
     def remove_table(self, table):
+        if self.__connexion is None:
+            return
+
         super().remove_table(table)
         self.execute(f"DROP TABLE `{table.name}`").close()
 
     def get_tables(self):
+        if self.__connexion is None:
+            return []
+
         cursor_table = self.execute("SHOW TABLES")
         tables = [row[0] for row in cursor_table.fetchall()]
         cursor_table.close()
         return tables
 
     def get_table(self, name):
+        if self.__connexion is None:
+            return super().get_table(name)
+
         self.verbose(f"Describing the table '{name}' ...'")
         table = super().get_table(name)
         cursor_column = self.execute(f"SHOW COLUMNS FROM `{table.name}`")
@@ -165,6 +183,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
 
     def read(self, table):
         """Iterator on the source (get the list of records from the table)"""
+        if self.__connexion is None:
+            return []
+
         list_fields = ""
         if len(table.fields.keys()) == 0:
             list_fields = "*"
@@ -183,6 +204,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
         return DWHConnectorDatabaseEngineMySQL.IteratorRecords(DWHConnectorDatabaseRecord(table), cursor, self.__dwh)
 
     def execute(self, request, values = None):
+        if self.__connexion is None:
+            return None
+
         super().execute(request, values)
 
         cursor = self.__connexion.cursor()
@@ -197,6 +221,9 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
 
     def count_rows(self, table_name, filter = None):
         # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
+        if self.__connexion is None:
+            return 0
+
         if filter is None:
             cursor_table = self.execute(f"SELECT COUNT(*) FROM `{table_name}`")
         else:

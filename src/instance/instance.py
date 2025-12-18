@@ -7,15 +7,21 @@ This module describes the list of instances.
 
 from turtle import isvisible
 from unittest.mock import seal
+
 from exception.exceptionrule import DWHExceptionRule
+from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
+
 from logger.loggerobject import DWHLoggerObject
 
 from connector.database.schema import DWHConnectorDatabaseSchema
 from connector.database.table import DWHConnectorDatabaseTable
 
 from connector.reader.readermysql import DWHConnectorReaderMySQL
+from connector.reader.readersqlserver import DWHConnectorReaderSQLServer
+from connector.reader.readerhfsql import DWHConnectorReaderHFSQL
 
 from connector.writer.writermysql import DWHConnectorWriterMySQL
+from connector.writer.writersqlserver import DWHConnectorWriterSQLServer
 
 from rule.technical.ruletechnicalignore import DWHRuleTechnicalIgnore
 from rule.technical.ruletechnicalcountrow import DWHRuleTechnicalCountRow
@@ -329,6 +335,13 @@ class DWHInstance(DWHLoggerObject):
         for rule in self.__rules:
             try:
                 rule.execute(record)
+            except DWHExceptionRecordFieldNotFound as exception_record:
+                if exception_record.message not in self.__fields_unknown:
+                    self.__fields_unknown[exception_record.message] = {}
+                if rule.name not in self.__fields_unknown[exception_record.message]:
+                    self.__fields_unknown[exception_record.message][rule.name] = 0
+                self.__fields_unknown[exception_record.message][rule.name] += 1
+                valid = False
             except DWHExceptionRule as exception_rule:
                 if exception_rule.name not in self.__reports:
                     self.__reports[exception_rule.name] = []
@@ -359,6 +372,11 @@ class DWHInstance(DWHLoggerObject):
                 self.exception(f"Exception on committing record to target '{target.name}'")
 
     def reports(self):
+        for name, rules in self.__fields_unknown.items():
+            self.error(f"Field '{name}' unknown into the table of the source configuration")
+            for rule_name, counter in rules.items():
+                self.error(f"- {counter} x {rule_name}")
+
         for name, exceptions in self.__reports.items():
             self.error(f"{name} not expected")
             for exception in exceptions:
@@ -395,6 +413,7 @@ class DWHInstance(DWHLoggerObject):
         self.__rules = []
         self.__targets = []
         self.__reports = {}
+        self.__fields_unknown = {}
 
         # Creation des sources
 

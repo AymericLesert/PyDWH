@@ -30,9 +30,14 @@ class DWHConnectorDatabaseFieldString(DWHConnectorDatabaseField):
     def to_mysql(self):
         return super().to_mysql(f"varchar({self.length})")
 
+    def to_SQLServer(self):
+        return super().to_SQLServer(f"nvarchar({self.length})")
+
     def convert(self, value):
         """Convert the value to the field type"""
         # TODO: improve type conversion
+        if isinstance(value, str):
+            return value.strip()
         return value
 
     def __init__(self, table, name, length = 0, is_null = True, default_value = None, **kwargs):

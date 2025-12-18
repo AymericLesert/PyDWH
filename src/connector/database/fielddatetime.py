@@ -19,6 +19,9 @@ class DWHConnectorDatabaseFieldDateTime(DWHConnectorDatabaseField):
     def to_mysql(self):
         return super().to_mysql("datetime")
 
+    def to_SQLServer(self):
+        return super().to_SQLServer("datetime")
+
     def convert(self, value):
         """Convert the value to the field type"""
         # TODO: improve type conversion

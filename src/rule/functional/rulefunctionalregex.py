@@ -21,7 +21,7 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
         value = record[self.field]
         if value is None:
             value = ""
-        items = self.__regex.match(value)
+        items = self.__regex.match(value.strip())
 
         if items is None:
             raise DWHExceptionRule(self, record)
@@ -31,9 +31,12 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
             if group_name is None:
                 continue
 
-            group_value = items.group(group_name)
-            if group_value is None:
-                continue
+            try:
+                group_value = items.group(group_name)
+                if group_value is None:
+                    continue
+            except:
+                raise DWHExceptionRule(self, record)
 
             values = properties.get('values', {})
             else_value = properties.get('else', None)

@@ -23,21 +23,36 @@ class DWHConnectorReader(DWHLoggerObject):
 
     def open(self):
         self.info("Openning the reader ...")
+        self.__engine.open()
 
     @property
     def schema(self):
-        return DWHConnectorDatabaseSchema(self.name)
+        """Get the schema of the source"""
+
+        schema = DWHConnectorDatabaseSchema(self.name)
+
+        for name in self.__engine.get_tables():
+            schema.add(self.__engine.get_table(name))
+
+        return schema
 
     def count_rows(self, table_name, filter = None):
-        return 0
+        # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
+        return self.__engine.count_rows(table_name, filter)
+
+    def read(self, table):
+        """Iterator on the source (get the list of records from the table)"""
+        return self.__engine.read(table)
 
     def close(self):
         self.info("Closing the reader ...")
 
     def __exit__(self, *args):
         """Close the instance of the reader"""
+        self.__engine.close()
         self.close()
 
-    def __init__(self, name):
+    def __init__(self, name, engine):
         super().__init__(name)
         self.__name = name
+        self.__engine = engine
