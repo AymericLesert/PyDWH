@@ -91,4 +91,4 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
         self.__name = name
         self.__is_null = is_null
         self.__default_value = default_value
-        self.__from_field = {}
+        self.__from_fields = {}

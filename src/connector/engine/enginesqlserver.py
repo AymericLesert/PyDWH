@@ -5,12 +5,12 @@
 This module describes the engine for mysql.
 """
 
-import mysql.connector
+from mssql_python import connect
 
 from connector.engine.engine import DWHConnectorDatabaseEngine
 from connector.database.record import DWHConnectorDatabaseRecord
 
-class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
+class DWHConnectorDatabaseEngineSQLServer(DWHConnectorDatabaseEngine):
     """This class defines a mysql engine"""
 
     MAP_TYPE = {

@@ -67,6 +67,10 @@ class DWHConnectorWriter(DWHLoggerObject):
         for table in [table for table in self.schema.tables.values() if table.name in existing_tables]:
             engine.update_table(table)
 
+    def read(self, table):
+        """Iterator on the table"""
+        return None
+
     def _write(self, table):
         """Write the records from a table into the target (abstract)"""
         pass

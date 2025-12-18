@@ -42,6 +42,7 @@
     <Compile Include="src\connector\database\table.py" />
     <Compile Include="src\connector\database\schema.py" />
     <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\engine\enginesqlserver.py" />
     <Compile Include="src\connector\engine\enginemysql.py" />
     <Compile Include="src\connector\engine\engine.py" />
     <Compile Include="src\connector\engine\__init__.py" />

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -12,4 +12,4 @@ class Date:
     TIME = "%H:%M:%S"
     DATETIME = "%Y-%m-%d %H:%M:%S"
 
-    NOW = datetime.datetime.now().strftime(DATETIME)
+    NOW = datetime.datetime.now()

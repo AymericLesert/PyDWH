@@ -15,7 +15,7 @@ def execute():
     parser.add_argument('--config', type=str, required=True, help="Fichier de configuration")
     args = parser.parse_args()
 
-    Date.NOW = datetime.datetime.now().strftime(Date.DATETIME)
+    Date.NOW = datetime.datetime.now()
 
     # Charge les variables d'environnement depuis le fichier .env (dont les logins / mots de passe)
 

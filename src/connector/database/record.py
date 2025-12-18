@@ -11,29 +11,34 @@ class DWHConnectorDatabaseRecord:
     """This class defines a record"""
 
     def __getattr__(self, field_name):
-        if field_name in self.__record:
-            return self.__record[field_name]
+        record = self.__dict__["_DWHConnectorDatabaseRecord__record"]
+        if field_name in record:
+            return record[field_name]
 
-        field = self.__table.fields.get(field_name, None)
+        table = self.__dict__["_DWHConnectorDatabaseRecord__table"]
+        field = table.fields.get(field_name, None)
         if field is None:
-            field = self.__table.extends.get(field_name, None)
+            field = table.extends.get(field_name, None)
         if field is None:
             return None
 
         return field.default_value
 
     def __setattr__(self, field_name, value):
-        field = self.__table.fields.get(field_name, None)
-        if field is None:
-            field = self.__table.extends.get(field_name, None)
-        if field is None:
-            raise DWHExceptionRecordFieldNotFound(f"{self.__table.name}.{field_name}")
+        table = self.__dict__["_DWHConnectorDatabaseRecord__table"]
 
-        self.__record[field_name] = field.convert(value)
+        field = table.fields.get(field_name, None)
+        if field is None:
+            field = table.extends.get(field_name, None)
+        if field is None:
+            raise DWHExceptionRecordFieldNotFound(f"{table.name}.{field_name}")
+
+        self.__dict__["_DWHConnectorDatabaseRecord__record"][field_name] = field.convert(value)
 
     def __delattr__(self, field_name):
-        if field_name in self.__record:
-            del self.__record[field_name]
+        record = self.__dict__["_DWHConnectorDatabaseRecord__record"]
+        if field_name in record:
+            del record[field_name]
 
     def __getitem__(self, field_name):
         return self.__getattr__(field_name)
@@ -44,13 +49,27 @@ class DWHConnectorDatabaseRecord:
     def __delitem__(self, field_name):
         self.__delattr__(field_name)
 
+    def set_datetime(self, datetime):
+        self.__dict__["_DWHConnectorDatabaseRecord__datetime"] = datetime
+
+    def get_datetime(self):
+        return self.__dict__["_DWHConnectorDatabaseRecord__datetime"]
+
+    def set_action(self, action):
+        self.__dict__["_DWHConnectorDatabaseRecord__action"] = action
+
+    def get_action(self):
+        return self.__dict__["_DWHConnectorDatabaseRecord__action"]
+
     def clear(self):
         """Clear the record"""
         record = self.__dict__["_DWHConnectorDatabaseRecord__record"]
+        table = self.__dict__["_DWHConnectorDatabaseRecord__table"]
+
         for key in list(record.keys()):
-            field = self.__table.fields.get(key, None)
+            field = table.fields.get(key, None)
             if field is None:
-                field = self.__table.extends.get(key, None)
+                field = table.extends.get(key, None)
             record[key] = field.default_value
 
     def get_table(self):
@@ -59,21 +78,24 @@ class DWHConnectorDatabaseRecord:
 
     def to_dict(self):
         """Convert the record to a dictionary"""
+        table = self.__dict__["_DWHConnectorDatabaseRecord__table"]
         result = {}
-        for name in self.__table.fields.keys():
+        for name in table.fields.keys():
             result[name] = self.__getattr__(name)
-        for name in self.__table.extends.keys():
+        for name in table.extends.keys():
             result[name] = self.__getattr__(name)
         return result
 
-    def to_list(self):
-        result = [self.__getattr__(name) for name in self.__table.fields]
-        result.extend([self.__getattr__(name) for name in self.__table.extends])
-        return result
+    def to_values_keys(self):
+        """List of values included into the fields within a key"""
+        return [self.__getattr__(name) for name in self.__dict__["_DWHConnectorDatabaseRecord__table"].keys]
 
-    def to_keys(self):
-        return [self.__getattr__(name) for name in self.__table.keys]
+    def to_values_fields(self):
+        """List of values included into the fields without a key"""
+        return [self.__getattr__(name) for name in self.__dict__["_DWHConnectorDatabaseRecord__table"].fields_no_keys]
 
     def __init__(self, table):
         self.__dict__["_DWHConnectorDatabaseRecord__table"] = table
         self.__dict__["_DWHConnectorDatabaseRecord__record"] = {}
+        self.__dict__["_DWHConnectorDatabaseRecord__datetime"] = None
+        self.__dict__["_DWHConnectorDatabaseRecord__action"] = None

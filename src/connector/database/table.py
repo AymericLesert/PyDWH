@@ -39,9 +39,11 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         return self.__extends
 
     @property
-    def count_fields(self):
-        """Get the number of fields in the table"""
-        return len(self.__fields)
+    def fields_no_keys(self):
+        if self.__fields_no_keys is None:
+            self.__fields_no_keys = [name for name in self.__fields if name not in self.__keys]
+            self.__fields_no_keys.extend([name for name in self.__extends if name not in self.__keys])
+        return self.__fields_no_keys
 
     @property
     def keys(self):
@@ -66,6 +68,11 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     @from_tables.setter
     def from_tables(self, from_tables):
         self.__from_tables = from_tables
+
+    @property
+    def count_fields(self):
+        """Get the number of fields in the table"""
+        return len(self.__fields)
 
     def add(self, name, type = "String", length = None, decimal = None, is_null = True, default_value = None, **kwargs):
         if name not in self.__fields:
@@ -113,12 +120,11 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         if record is None:
             return
 
-        self.__ids.append(record.to_keys())
-        self.__rows.append(record.to_list())
+        self.__rows.append((record.to_values_keys(), record.to_values_fields()))
 
     @property
     def rows(self):
-        return self.__ids, self.__rows
+        return self.__rows
 
     def __iter__(self):
         """Iterator on the records from the table"""
@@ -132,7 +138,7 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         self.__fields = {}
         self.__extends = {}
         self.__keys = []
+        self.__fields_no_keys = None
 
         self.__from_tables = None
-        self.__ids = []
         self.__rows = []
