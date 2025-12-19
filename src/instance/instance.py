@@ -18,7 +18,8 @@ from connector.database.table import DWHConnectorDatabaseTable
 
 from connector.reader.readermysql import DWHConnectorReaderMySQL
 from connector.reader.readersqlserver import DWHConnectorReaderSQLServer
-from connector.reader.readerhfsql import DWHConnectorReaderHFSQL
+from connector.reader.readerhfsql import DWHConnectorReaderHFSQLClassique
+from connector.reader.readerhfsql import DWHConnectorReaderHFSQLClient
 
 from connector.writer.writermysql import DWHConnectorWriterMySQL
 from connector.writer.writersqlserver import DWHConnectorWriterSQLServer

@@ -51,10 +51,19 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
     def open(self):
         """Connect to the OLE database"""
         super().open()
-        self.info(f"Connecting to OLE database ({self.__directory})")
+        self.info(f"Connecting to OLE database ({self.__directory if self.__directory is not None else self.__database})")
         try:
             self.__connexion = win32com.client.Dispatch("ADODB.Connection")
-            self.__connexion.Open(f"Provider=PCSOFT.HFSQL;Initial Catalog={self.__directory};")
+
+            if self.__directory is not None:
+                string_connexion = f"Provider=PCSOFT.HFSQL;Initial Catalog={self.__directory};"
+            elif self.__username is None:
+                string_connexion = f"Provider=PCSOFT.HFSQL;Data source={self.__data_source};Initial Catalog={self.__database};"
+            else:
+                string_connexion = f"Provider=PCSOFT.HFSQL;Data source={self.__data_source};Initial Catalog={self.__database};" + \
+                                   f"User ID={self.__username};Password={self.__password};"
+
+            self.__connexion.Open(string_connexion)
         except:
             self.exception("Connexion to OLE database failed")
             self.__connexion = None
@@ -157,7 +166,11 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             self.__connexion = None
         super().close()
 
-    def __init__(self, name, directory = "", **kwargs):
+    def __init__(self, name, directory = None, data_source = None, username = None, password = None, database = None, **kwargs):
         super().__init__(name)
         self.__directory = directory
+        self.__data_source = data_source
+        self.__username = username
+        self.__password = self.get_password(password)
+        self.__database = database
         self.__connexion = None
