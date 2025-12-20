@@ -55,6 +55,14 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
             self.__cursor = cursor
             self.__dwh = dwh
 
+    def get_request_insert(self, table):
+        """Build SQL request"""
+
+        list_fields = ', '.join([f"`{field}`" for field in table.keys] + [f"`{field}`" for field in table.fields if field not in table.keys])
+        list_values = ', '.join(["%s" for _ in table.fields])
+
+        return f"INSERT INTO `{table.name}` ({list_fields}, `DWHAction`, `DWHDateHeure`) VALUES (%s, %s, {list_values})"
+
     def open(self):
         """Connect to the database MySQL"""
         super().open()
@@ -231,6 +239,11 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
         count_rows = cursor_table.fetchone()[0]
         cursor_table.close()
         return count_rows
+
+    def rollback(self):
+        super().rollback()
+        if self.__connexion is not None:
+            self.__connexion.rollback()
 
     def commit(self):
         super().commit()

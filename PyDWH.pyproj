@@ -11,11 +11,11 @@
     <OutputPath>.</OutputPath>
     <Name>PyDWH</Name>
     <RootNamespace>PyDWH</RootNamespace>
-    <InterpreterId>Global|PythonCore|3.13</InterpreterId>
+    <InterpreterId>MSBuild|dwh|$(MSBuildProjectFullPath)</InterpreterId>
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <IsWindowsApplication>False</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--config ../PyDWHConfig/config.yml</CommandLineArguments>
+    <CommandLineArguments>--config ../PyDWHConfig/config.yml --instance DSP</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <Environment>PYTHONPATH=src\</Environment>
   </PropertyGroup>
@@ -35,6 +35,7 @@
     <Compile Include="src\connector\database\fielddate.py" />
     <Compile Include="src\connector\database\fieldboolean.py" />
     <Compile Include="src\connector\database\fielddouble.py" />
+    <Compile Include="src\connector\database\fieldjson.py" />
     <Compile Include="src\connector\database\fieldstring.py" />
     <Compile Include="src\connector\database\fieldinteger.py" />
     <Compile Include="src\connector\database\record.py" />
@@ -42,12 +43,22 @@
     <Compile Include="src\connector\database\table.py" />
     <Compile Include="src\connector\database\schema.py" />
     <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\engine\enginehfsql.py" />
+    <Compile Include="src\connector\engine\enginecsv.py" />
+    <Compile Include="src\connector\engine\enginepostgresql.py" />
     <Compile Include="src\connector\engine\enginesqlserver.py" />
     <Compile Include="src\connector\engine\enginemysql.py" />
     <Compile Include="src\connector\engine\engine.py" />
     <Compile Include="src\connector\engine\__init__.py" />
+    <Compile Include="src\connector\reader\readerhfsql.py" />
+    <Compile Include="src\connector\reader\readerpostgresql.py" />
+    <Compile Include="src\connector\reader\readercsv.py" />
+    <Compile Include="src\connector\reader\readersqlserver.py" />
     <Compile Include="src\connector\writer\writermysql.py" />
     <Compile Include="src\connector\writer\writer.py" />
+    <Compile Include="src\connector\writer\writerspostgresql.py" />
+    <Compile Include="src\connector\writer\writercsv.py" />
+    <Compile Include="src\connector\writer\writersqlserver.py" />
     <Compile Include="src\connector\writer\__init__.py" />
     <Compile Include="src\connector\__init__.py" />
     <Compile Include="src\exception\exception.py" />
@@ -117,6 +128,17 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="dwh\">
+      <Id>dwh</Id>
+      <Version>3.13</Version>
+      <Description>dwh (Python 3.13.9)</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

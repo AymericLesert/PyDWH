@@ -2,7 +2,7 @@
 # pylint: disable=bare-except
 
 """
-This module describes the schema structure.
+This module describes a double field.
 """
 
 from connector.database.field import DWHConnectorDatabaseField
@@ -20,6 +20,9 @@ class DWHConnectorDatabaseFieldDouble(DWHConnectorDatabaseField):
 
     def to_SQLServer(self):
         return super().to_SQLServer(f"decimal({self.length+self.decimal},{self.decimal})")
+
+    def to_PostgreSQL(self):
+        return super().to_PostgreSQL(f"decimal({self.length+self.decimal},{self.decimal})")
 
     def convert(self, value):
         """Convert the value to the field type"""

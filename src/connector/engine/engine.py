@@ -32,6 +32,10 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
         cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
         return cipher_suite.decrypt(bytes(encrypted_password, 'utf-8')).decode('utf-8')
 
+    def get_request_insert(self, table):
+        """Build Insert SQL request"""
+        return ""
+
     def open(self):
         self.info("Openning the engine ...")
 
@@ -64,6 +68,9 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
 
     def count_rows(self, table_name, filter = None):
         return 0
+
+    def rollback(self):
+        self.verbose(f"Rollbacking ...")
 
     def commit(self):
         self.verbose(f"Committing ...")

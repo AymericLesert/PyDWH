@@ -16,13 +16,17 @@ from logger.loggerobject import DWHLoggerObject
 from connector.database.schema import DWHConnectorDatabaseSchema
 from connector.database.table import DWHConnectorDatabaseTable
 
+from connector.reader.readercsv import DWHConnectorReaderCSV
 from connector.reader.readermysql import DWHConnectorReaderMySQL
 from connector.reader.readersqlserver import DWHConnectorReaderSQLServer
 from connector.reader.readerhfsql import DWHConnectorReaderHFSQLClassique
 from connector.reader.readerhfsql import DWHConnectorReaderHFSQLClient
+from connector.reader.readerpostgresql import DWHConnectorReaderPostgreSQL
 
+from connector.writer.writercsv import DWHConnectorWriterCSV
 from connector.writer.writermysql import DWHConnectorWriterMySQL
 from connector.writer.writersqlserver import DWHConnectorWriterSQLServer
+from connector.writer.writerspostgresql import DWHConnectorWriterPostgreSQL
 
 from rule.technical.ruletechnicalignore import DWHRuleTechnicalIgnore
 from rule.technical.ruletechnicalcountrow import DWHRuleTechnicalCountRow

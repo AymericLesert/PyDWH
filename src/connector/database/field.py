@@ -2,7 +2,7 @@
 # pylint: disable=bare-except
 
 """
-This module describes the schema structure.
+This module describes a field type into a schema.
 """
 
 import datetime
@@ -107,6 +107,29 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
             not_null = " NOT NULL"
 
         return f"[{self.name}] {type_sqlserver}{default_value}{not_null}"
+
+    def to_PostgreSQL(self, type_postgresql):
+        default_value = ""
+        if not self.default_value is None:
+            if isinstance(self.default_value, int):
+                default_value = f"DEFAULT {self.default_value}"
+            elif isinstance(self.default_value, bool):
+                if self.default_value:
+                    default_value = "DEFAULT 1"
+                else:
+                    default_value = "DEFAULT 0"
+            elif isinstance(self.default_value, float):
+                default_value = f"DEFAULT {self.default_value}"
+            elif isinstance(self.default_value, datetime.datetime):
+                default_value = f"DEFAULT {self.default_value}"
+            else:
+                default_value = f"DEFAULT '{self.default_value}'"
+
+        not_null = ""
+        if not self.is_null:
+            not_null = "NOT NULL"
+
+        return [f"\"{self.name}\"", type_postgresql, default_value, not_null]
 
     def __init__(self, table, name, is_null, default_value):
         super().__init__(f"{table.connector.name}.{table.name}.{name}")

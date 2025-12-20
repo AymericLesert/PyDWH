@@ -2,7 +2,7 @@
 # pylint: disable=bare-except
 
 """
-This module describes the schema structure.
+This module describes a record.
 """
 
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound

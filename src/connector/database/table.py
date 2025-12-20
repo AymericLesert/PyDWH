@@ -14,6 +14,7 @@ from connector.database.fielddouble import DWHConnectorDatabaseFieldDouble
 from connector.database.fieldboolean import DWHConnectorDatabaseFieldBoolean
 from connector.database.fielddate import DWHConnectorDatabaseFieldDate
 from connector.database.fielddatetime import DWHConnectorDatabaseFieldDateTime
+from connector.database.fieldjson import DWHConnectorDatabaseFieldJSON
 
 class DWHConnectorDatabaseTable(DWHLoggerObject):
     """This class defines a table containing Fields"""

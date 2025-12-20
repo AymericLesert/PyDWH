@@ -164,8 +164,9 @@ class DWHConnectorWriter(DWHLoggerObject):
             while i+1 < len(old_rows) and old_key == old_rows[i+1][0]:
                 i += 1
 
-            rows.append(old_rows[i][0] + old_rows[i][1] + [DWHConnectorDatabaseEngine.DWH_ACTION_REMOVE, Date.NOW])
-            nb_removed += 1
+            if old_rows[i][3] != DWHConnectorDatabaseEngine.DWH_ACTION_REMOVE:
+                rows.append(old_rows[i][0] + old_rows[i][1] + [DWHConnectorDatabaseEngine.DWH_ACTION_REMOVE, Date.NOW])
+                nb_removed += 1
             i += 1
 
         while j < len(new_rows):
@@ -179,7 +180,7 @@ class DWHConnectorWriter(DWHLoggerObject):
         # Insert records if something has changed
 
         if len(rows) > 0:
-            cursor = self.__engine.execute(self.get_request_insert(table), rows)
+            cursor = self.__engine.execute(self.__engine.get_request_insert(table), rows)
             self.__engine.commit()
             cursor.close()
 

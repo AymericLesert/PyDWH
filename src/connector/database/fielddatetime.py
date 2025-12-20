@@ -2,14 +2,14 @@
 # pylint: disable=bare-except
 
 """
-This module describes the schema structure.
+This module describes a datetime field.
 """
 
 from connector.database.field import DWHConnectorDatabaseField
 from tools.date import Date
 
 class DWHConnectorDatabaseFieldDateTime(DWHConnectorDatabaseField):
-    """This class defines a boolean field"""
+    """This class defines a datetime field"""
 
     @property
     def type(self):
@@ -21,6 +21,9 @@ class DWHConnectorDatabaseFieldDateTime(DWHConnectorDatabaseField):
 
     def to_SQLServer(self):
         return super().to_SQLServer("datetime")
+
+    def to_PostgreSQL(self):
+        return super().to_PostgreSQL("time without time zone")
 
     def convert(self, value):
         """Convert the value to the field type"""

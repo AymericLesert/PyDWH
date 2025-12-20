@@ -2,7 +2,7 @@
 # pylint: disable=bare-except
 
 """
-This module describes the schema structure.
+This module describes an integer field.
 """
 
 from connector.database.field import DWHConnectorDatabaseField
@@ -20,6 +20,9 @@ class DWHConnectorDatabaseFieldInteger(DWHConnectorDatabaseField):
 
     def to_SQLServer(self):
         return super().to_SQLServer("int")
+
+    def to_PostgreSQL(self):
+        return super().to_PostgreSQL("integer")
 
     def convert(self, value):
         """Convert the value to the field type"""

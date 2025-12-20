@@ -154,6 +154,10 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         cursor_table.Close()
         return count_rows
 
+    def rollback(self):
+        super().rollback()
+        self.error("rollback : Not implemented!")
+
     def commit(self):
         super().commit()
         self.error("commit : Not implemented!")
