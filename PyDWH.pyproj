@@ -43,6 +43,8 @@
     <Compile Include="src\connector\database\table.py" />
     <Compile Include="src\connector\database\schema.py" />
     <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\engine\enginecsvreader.py" />
+    <Compile Include="src\connector\engine\enginecsvwriter.py" />
     <Compile Include="src\connector\engine\enginehfsql.py" />
     <Compile Include="src\connector\engine\enginecsv.py" />
     <Compile Include="src\connector\engine\enginepostgresql.py" />
@@ -99,6 +101,8 @@
     <Compile Include="src\scripts\__init__.py" />
     <Compile Include="src\tools\date.py" />
     <Compile Include="src\tools\__init__.py" />
+    <Compile Include="test\engine\test_csv_writer.py" />
+    <Compile Include="test\engine\test_csv_reader.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env" />
@@ -107,9 +111,12 @@
     <Content Include="pyproject.toml" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
+    <Content Include="test\config\empty.yml" />
+    <Content Include="test\config\logging.yml" />
     <Content Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="test\" />
     <Folder Include="src\configuration\" />
     <Folder Include="src\connector\database\" />
     <Folder Include="src\connector\engine\" />
@@ -125,6 +132,8 @@
     <Folder Include="src\rule\functional\" />
     <Folder Include="src\rule\technical\" />
     <Folder Include="src\scripts\" />
+    <Folder Include="test\config\" />
+    <Folder Include="test\engine\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.13" />

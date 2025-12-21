@@ -56,9 +56,9 @@ def execute():
                     if instance.apply(record):
                         instance.write(record)
 
-                # Commit all records updated
+            # Commit all records updated
 
-                instance.commit()
+            instance.commit()
 
             # Create reports from exceptions identified while reading, checking and transforming records
             

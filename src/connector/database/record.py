@@ -4,7 +4,7 @@
 """
 This module describes a record.
 """
-
+import datetime
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
 
 class DWHConnectorDatabaseRecord:
@@ -49,14 +49,16 @@ class DWHConnectorDatabaseRecord:
     def __delitem__(self, field_name):
         self.__delattr__(field_name)
 
-    def set_datetime(self, datetime):
-        self.__dict__["_DWHConnectorDatabaseRecord__datetime"] = datetime
+    def set_datetime(self, value):
+        if isinstance(value, str):
+            value = datetime.datetime.fromisoformat(value)
+        self.__dict__["_DWHConnectorDatabaseRecord__datetime"] = value
 
     def get_datetime(self):
         return self.__dict__["_DWHConnectorDatabaseRecord__datetime"]
 
     def set_action(self, action):
-        self.__dict__["_DWHConnectorDatabaseRecord__action"] = action
+        self.__dict__["_DWHConnectorDatabaseRecord__action"] = int(action)
 
     def get_action(self):
         return self.__dict__["_DWHConnectorDatabaseRecord__action"]

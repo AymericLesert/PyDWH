@@ -77,10 +77,6 @@ class DWHConnectorWriter(DWHLoggerObject):
         """Iterator on the target (get the list of records from the table)"""
         return self.__engine.read(table)
 
-    def _write(self, table):
-        """Write the records from a table into the target (abstract)"""
-        pass
-
     def write(self, record):
         if self.__schema is None or record is None:
             return
@@ -106,6 +102,9 @@ class DWHConnectorWriter(DWHLoggerObject):
                 new_record[field.name] = field.convert(value)
 
             table.store(new_record)
+
+    def rollback_table(self, table):
+        pass
 
     def commit_table(self, table):
         # Sort rows by ids
@@ -182,9 +181,17 @@ class DWHConnectorWriter(DWHLoggerObject):
         if len(rows) > 0:
             cursor = self.__engine.execute(self.__engine.get_request_insert(table), rows)
             self.__engine.commit()
-            cursor.close()
+            if cursor is not None:
+                cursor.close()
 
         self.info(f"{len(rows)} records inserted into table '{table.name}' ({nb_added} added, {nb_updated} updated, {nb_removed} removed)")
+
+    def rollback(self):
+        self.info(f"Rollbacking the writer ...")
+
+        for table in self.__schema.tables.values():
+            self.rollback_table(table)
+            table.clear()
 
     def commit(self):
         self.info(f"Committing the writer ...")

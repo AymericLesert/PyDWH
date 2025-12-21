@@ -2,7 +2,7 @@
 # pylint: disable=bare-except
 
 """
-This module describes the engine for mysql.
+This module describes the engine for csv files.
 """
 
 import csv
@@ -10,12 +10,12 @@ import csv
 from connector.engine.engine import DWHConnectorDatabaseEngine
 from connector.database.record import DWHConnectorDatabaseRecord
 
-from dotenv import load_dotenv
-from configuration.configuration import DWHConfiguration
-from logger.logger import DWHLogger
-
 class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
     """This class defines a csv engine"""
+
+    CSVRead = 0
+    CSVWrite = 1
+    CSVAdd = 2
 
     class IteratorRecords:
         def __iter__(self):
@@ -24,117 +24,86 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
         def __next__(self):
             self.__record.clear()
 
-            row = next(self.__csv_handle)
-
             table = self.__record.get_table()
-            for i, field in enumerate(table.fields.values()):
-                if field.type is None:
-                    self.__record[field.name] = None
-                else:
-                    self.__record[field.name] = row[i]
+            row = next(self.__handle[1])
+
+            for i, header in enumerate(self.__handle[2]):
+                if header in table.fields:
+                    self.__record[header] = row[i]
+                if header == "DWHAction":
+                    self.__record.set_action(row[i])
+                if header == "DWHDateHeure":
+                    self.__record.set_datetime(row[i])
 
             return self.__record
 
-        def __init__(self, record, csv_handle):
+        def __init__(self, record, handle):
             self.__record = record
-            self.__csv_handle = csv_handle
+            self.__handle = handle
 
-    def get_request_insert(self, table):
-        """Build SQL request"""
+    @property
+    def files(self):
+        return self.__files
 
-        list_fields = ', '.join([f"`{field}`" for field in table.keys] + [f"`{field}`" for field in table.fields if field not in table.keys])
-        list_values = ', '.join(["%s" for _ in table.fields])
+    def get_file(self, name, mode = CSVRead):
+        if name not in self.__files:
+            return [None, None, None]
 
-        return f"INSERT INTO `{table.name}` ({list_fields}, `DWHAction`, `DWHDateHeure`) VALUES (%s, %s, {list_values})"
-
-    def get_file(self, name):
         file = self.__files[name]
-        handle = open(file['filename'], newline='', encoding=file.get('encoding', 'ansi'))
-        csv_handle = csv.reader(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
-        return [handle, csv_handle, next(csv_handle)]
+        
+        handle = None
+        csv_handle = None
+        header = []
+
+        if mode == DWHConnectorDatabaseEngineCSV.CSVRead:
+            self.verbose(f"Reading the file '{file['filename']}' ...")
+            handle = open(file['filename'], 'r', newline='', encoding=file.get('encoding', 'ansi'))
+            csv_handle = csv.reader(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
+            header = next(csv_handle)
+        elif mode == DWHConnectorDatabaseEngineCSV.CSVWrite:
+            self.verbose(f"Writing the file '{file['filename']}' ...")
+            handle = open(file['filename'], 'w', newline='', encoding=file.get('encoding', 'ansi'))
+            csv_handle = csv.writer(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
+            header = []
+        elif mode == DWHConnectorDatabaseEngineCSV.CSVAdd:
+            self.verbose(f"Writing the file '{file['filename']}' ...")
+            handle = open(file['filename'], 'a', newline='', encoding=file.get('encoding', 'ansi'))
+            csv_handle = csv.writer(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
+            header = []
+
+        return [handle, csv_handle, header]
 
     def open(self):
-        """Connect to the CSV Files"""
+        """Open the CSV Files"""
         super().open()
-        self.info("Connecting to CSV files")
-        self.__handles = {}
-        for name, file in self.__files.items():
-            self.info(f"Openning the file '{name}' - '{file["filename"]}' ...")
-            try:
-                self.__handles[name] = self.get_file(name)
-            except StopIteration:
-                self.info("File empty")
-            except:
-                self.exception("Unable to open file")
 
     def create_dwh(self):
+        # Do not create the table DWHAction
         pass
 
     def create_table(self, table):
-        # TODO : Create a new CSV file
-        pass
+        super().create_table(table)
 
     def update_table(self, table):
-        # TODO : Update a file if the target exists ...
-        pass
+        super().update_table(table)
 
     def remove_table(self, table):
-        # TODO : Remove a file or move it
-        pass
+        super().remove_table(table)
 
     def get_tables(self):
-        if self.__handles is None:
-            return []
-
-        return [name for name in self.__handles]
+        return [name for name in self.__files]
 
     def get_table(self, name):
-        if self.__handles is None:
-            return super().get_table(name)
-
-        self.verbose(f"Describing the table '{name}' ...'")
-        table = super().get_table(name)
-        _, _, headers = self.__handles[name]
-
-        for column in headers:
-            table.add(name = column, type = "String")
-
-        return table
+        return super().get_table(name)
 
     def read(self, table):
-        """Iterator on the source (get the list of records from the table)"""
-        if self.__handles is None:
-            return []
+        return super().read(table)
 
-        return DWHConnectorDatabaseEngineCSV.IteratorRecords(DWHConnectorDatabaseRecord(table), self.__handles[table.name][1])
-
-    def count_rows(self, table_name, filter = None):
-        # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
-        if self.__handles is None:
-            return 0
-
-        try:
-            handle, csv_handle, _ = self.get_file(table_name)
-        except StopIteration:
-            return 0
-
-        try:
-            count_rows = 0
-            for row in csv_handle:
-                count_rows += 1
-        finally:
-            handle.close()
-
-        return 0 if count_rows <= 0 else count_rows - 1
+    def count_rows(self, table_name, filter):
+        return super().count_rows(table_name, filter)
 
     def close(self):
-        """Close the connexion to the CSV files"""
-        if self.__handles is not None:
-            self.info("Closing to the CSV files")
-            for name, file in self.__handles.items():
-                self.info(f"Closing the file '{name}' - '{self.__files[name]['filename']}' ...")
-                file[0].close()
-            self.__handles = None
+        """Close the CSV files"""
         super().close()
 
     def __init__(self, name, files = {}, **kwargs):
@@ -145,30 +114,3 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
             self.__files = files
         else:
             self.__files = files.to_dict()
-        self.__handles = None
-
-
-if __name__ == "__main__":
-    # Charge les variables d'environnement depuis le fichier .env (dont les logins / mots de passe)
-
-    load_dotenv()
-
-    # Charge le fichier de configuration
-    
-    configuration = DWHConfiguration("../PyDWHConfig/config.yml")
-
-    # Initialise le logger
-
-    logger = DWHLogger(configuration)
-    logger.open()
-
-    engine = DWHConnectorDatabaseEngineCSV("CSV", files = { "OF": { "filename": "D:\\024 - Team Plastique\\DWH\\ECMA\\OF.csv", "delimiter": ";", "encoding": "utf-8" } })
-    engine.open()
-    engine.info(engine.get_tables())
-    for name in engine.get_tables():
-        engine.info(f"Nb rows : {engine.count_rows(name)}")
-        for row in engine.get_table(name):
-            engine.info(row.to_dict())
-    engine.close()
-
-    logger.close()

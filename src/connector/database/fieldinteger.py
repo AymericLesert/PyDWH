@@ -27,7 +27,9 @@ class DWHConnectorDatabaseFieldInteger(DWHConnectorDatabaseField):
     def convert(self, value):
         """Convert the value to the field type"""
         # TODO: improve type conversion
-        return value
+        if value is None:
+            return value
+        return int(value)
 
     def __init__(self, table, name, is_null = True, default_value = None, **kwargs):
         if not is_null and default_value is None:
