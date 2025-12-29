@@ -6,36 +6,47 @@ import datetime
 from dotenv import load_dotenv
 
 from tools.date import Date
+from tools.smtp import MailSender
 from configuration.configuration import DWHConfiguration
 from logger.logger import DWHLogger
 from instance.instance import DWHInstance
 
 def execute():
-    parser = argparse.ArgumentParser(description="Execution des règles d'enrichissement de l'entrepot")
-    parser.add_argument('--config', type=str, required=True, help="Fichier de configuration")
-    parser.add_argument('--instance', type=str, required=False, help="Nom de l'instance à exécuter")
+    parser = argparse.ArgumentParser(description="Run rules towards DataWareHouse")
+    parser.add_argument('--config', type=str, required=True, help="Configuration file")
+    parser.add_argument('--instance', type=str, required=False, help="Instance name")
     args = parser.parse_args()
 
     Date.NOW = datetime.datetime.now()
 
-    # Charge les variables d'environnement depuis le fichier .env (dont les logins / mots de passe)
+    # Load environment variables from the file .env
 
     load_dotenv()
 
-    # Charge le fichier de configuration
+    # Load configuration file
     
     configuration = DWHConfiguration(args.config)
 
-    # Initialise le logger
+    # Initialize logger
 
     logger = DWHLogger(configuration)
     logger.open()
+
+    # Initialize sender mailer if needed
+
+    mailer = None
+    if configuration.get("smtp", {}).get('enable', False):
+        smtp_config = configuration.smtp
+        mailer = MailSender(**smtp_config)
+        mailer.info("Initializing SMTP mailer ...")
+
+    # Execute all instances
 
     for item in configuration.get('instances', []):
         if args.instance is not None and item.get('name', '') != args.instance:
             continue
 
-        with DWHInstance(item) as instance:
+        with DWHInstance(item, mailer) as instance:
 
             # Update tables into the target
 

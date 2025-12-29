@@ -5,9 +5,6 @@
 This module describes the list of instances.
 """
 
-from turtle import isvisible
-from unittest.mock import seal
-
 from exception.exceptionrule import DWHExceptionRule
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
 
@@ -407,7 +404,7 @@ class DWHInstance(DWHLoggerObject):
         """Close the instance"""
         self.close()
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, mailer):
         self.__name = configuration.get('name', '')
         super().__init__(self.name)
 
@@ -420,6 +417,7 @@ class DWHInstance(DWHLoggerObject):
         self.__targets = []
         self.__reports = {}
         self.__fields_unknown = {}
+        self.__mailer = mailer
 
         # Creation des sources
 
@@ -460,4 +458,3 @@ class DWHInstance(DWHLoggerObject):
             if new_target is None:
                 continue
             self.__targets.append(new_target)
-

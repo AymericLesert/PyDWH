@@ -114,7 +114,7 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
 
         try:
             count_rows = 0
-            for row in csv_handle:
+            for _ in csv_handle:
                 count_rows += 1
         finally:
             handle.close()

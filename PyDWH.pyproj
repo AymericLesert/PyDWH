@@ -102,6 +102,7 @@
     </Compile>
     <Compile Include="src\scripts\__init__.py" />
     <Compile Include="src\tools\date.py" />
+    <Compile Include="src\tools\smtp.py" />
     <Compile Include="src\tools\__init__.py" />
     <Compile Include="test\engine\test_csv_writer.py" />
     <Compile Include="test\engine\test_csv_reader.py" />
