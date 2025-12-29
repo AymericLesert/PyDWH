@@ -18,6 +18,7 @@
     <CommandLineArguments>--config ../PyDWHConfig/config.yml --instance DSP</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <Environment>PYTHONPATH=src\</Environment>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -86,6 +87,7 @@
     <Compile Include="src\rule\functional\rulefunctionallistvalues.py" />
     <Compile Include="src\rule\functional\rulefunctional.py" />
     <Compile Include="src\rule\functional\__init__.py" />
+    <Compile Include="src\rule\technical\ruletechnicalvalues.py" />
     <Compile Include="src\rule\technical\ruletechnicalcountrow.py" />
     <Compile Include="src\rule\technical\ruletechnicalignore.py" />
     <Compile Include="src\rule\technical\ruletechnical.py" />

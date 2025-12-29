@@ -114,6 +114,9 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
     def count_rows(self):
         return self.connector.count_rows(self.name, self.filter)
 
+    def get_distinct_values(self, field_name):
+        return self.connector.get_distinct_values(self.name, field_name, self.filter)
+
     def clear(self):
         self.__rows.clear()
 

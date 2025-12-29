@@ -154,6 +154,16 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         cursor_table.Close()
         return count_rows
 
+    def get_distinct_values(self, table_name, field_name, filter = None):
+        if filter is None:
+            cursor_table = self.execute(f"SELECT DISTINCT({field_name}), COUNT(*) FROM {table_name} GROUP BY {field_name}")
+        else:
+            cursor_table = self.execute(f"SELECT DISTINCT({field_name}), COUNT(*) FROM {table_name} WHERE {filter} GROUP BY {field_name}")
+
+        values = cursor_table.fetchall()
+        cursor_table.Close()
+        return values
+
     def rollback(self):
         super().rollback()
         self.error("rollback : Not implemented!")

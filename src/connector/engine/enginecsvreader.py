@@ -11,6 +11,10 @@ from connector.database.record import DWHConnectorDatabaseRecord
 class DWHConnectorDatabaseEngineCSVReader(DWHConnectorDatabaseEngineCSV):
     """This class defines a reading csv engine"""
 
+    @property
+    def handles(self):
+        return self.__handles
+
     def open(self):
         """Open the CSV Files for read"""
         super().open()
@@ -45,25 +49,6 @@ class DWHConnectorDatabaseEngineCSVReader(DWHConnectorDatabaseEngineCSV):
             return []
 
         return DWHConnectorDatabaseEngineCSV.IteratorRecords(DWHConnectorDatabaseRecord(table), self.__handles[table.name])
-
-    def count_rows(self, table_name, filter = None):
-        # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
-        if self.__handles is None:
-            return 0
-
-        try:
-            handle, csv_handle, _ = self.get_file(table_name, DWHConnectorDatabaseEngineCSV.CSVRead)
-        except StopIteration:
-            return 0
-
-        try:
-            count_rows = 0
-            for row in csv_handle:
-                count_rows += 1
-        finally:
-            handle.close()
-
-        return 0 if count_rows <= 0 else count_rows - 1
 
     def close(self):
         """Close the connexion to the CSV files"""

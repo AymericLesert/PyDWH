@@ -69,6 +69,9 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
     def count_rows(self, table_name, filter = None):
         return 0
 
+    def get_distinct_values(self, table_name, field_name, filter):
+        return []
+
     def rollback(self):
         self.verbose(f"Rollbacking ...")
 

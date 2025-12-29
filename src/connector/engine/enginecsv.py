@@ -45,6 +45,10 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
     def files(self):
         return self.__files
 
+    @property
+    def handles(self):
+        return None
+
     def get_file(self, name, mode = CSVRead):
         if name not in self.__files:
             return [None, None, None]
@@ -99,8 +103,45 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
     def read(self, table):
         return super().read(table)
 
-    def count_rows(self, table_name, filter):
-        return super().count_rows(table_name, filter)
+    def count_rows(self, table_name, filter = None):
+        if self.handles is None:
+            return 0
+
+        try:
+            handle, csv_handle, _ = self.get_file(table_name, DWHConnectorDatabaseEngineCSV.CSVRead)
+        except StopIteration:
+            return 0
+
+        try:
+            count_rows = 0
+            for row in csv_handle:
+                count_rows += 1
+        finally:
+            handle.close()
+
+        return 0 if count_rows <= 0 else count_rows - 1
+
+    def get_distinct_values(self, table_name, field_name, filter = None):
+        if self.handles is None:
+            return []
+
+        try:
+            handle, csv_handle, header = self.get_file(table_name, DWHConnectorDatabaseEngineCSV.CSVRead)
+        except StopIteration:
+            return []
+
+        values = {}
+        try:
+            index_field = header.index(field_name)
+            for row in csv_handle:
+                value = row[index_field]
+                if value not in values:
+                    values[value] = 0
+                values[value] += 1
+        finally:
+            handle.close()
+
+        return [[value, count] for value, count in values.items()]
 
     def close(self):
         """Close the CSV files"""

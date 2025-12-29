@@ -14,6 +14,10 @@ from connector.database.record import DWHConnectorDatabaseRecord
 class DWHConnectorDatabaseEngineCSVWriter(DWHConnectorDatabaseEngineCSV):
     """This class defines a writing csv engine"""
 
+    @property
+    def handles(self):
+        return self.__handles
+
     def get_request_insert(self, table):
         return table.name
 
@@ -163,26 +167,6 @@ class DWHConnectorDatabaseEngineCSVWriter(DWHConnectorDatabaseEngineCSV):
         handle[0].close()
 
         self.verbose(f"Writing {len(values)} rows ...")
-
-    def count_rows(self, table_name, filter = None):
-        # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
-
-        if table_name not in self.files:
-            return 0
-
-        try:
-            handle, csv_handle, _ = self.get_file(table_name, DWHConnectorDatabaseEngineCSV.CSVRead)
-        except:
-            return 0
-
-        try:
-            count_rows = 0
-            for row in csv_handle:
-                count_rows += 1
-        finally:
-            handle.close()
-
-        return 0 if count_rows <= 0 else count_rows - 1
 
     def close(self):
         """Close the connexion to the CSV files"""

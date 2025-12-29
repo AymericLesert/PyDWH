@@ -30,6 +30,7 @@ from connector.writer.writerspostgresql import DWHConnectorWriterPostgreSQL
 
 from rule.technical.ruletechnicalignore import DWHRuleTechnicalIgnore
 from rule.technical.ruletechnicalcountrow import DWHRuleTechnicalCountRow
+from rule.technical.ruletechnicalvalues import DWHRuleTechnicalValues
 
 from rule.functional.rulefunctionallistvalues import DWHRuleFunctionalListValues
 from rule.functional.rulefunctionalregex import DWHRuleFunctionalRegex
