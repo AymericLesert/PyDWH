@@ -27,6 +27,13 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
         columns = ['date', 'table', 'rows']
         row = { 'date': date, 'table': table.name, 'rows' : table.count_rows }
 
+        directory = os.path.dirname(self.__csv_file)
+        if directory != '':
+            try:
+                os.makedirs(directory, exist_ok=True)
+            except:
+                pass
+
         add_header = not (os.path.exists(self.__csv_file) and os.path.getsize(self.__csv_file) > 0)
         with open(self.__csv_file, 'a', newline='', encoding=self.__encoding) as csvfile:
             writer = csv.DictWriter(csvfile, delimiter=self.__delimiter, quoting = csv.QUOTE_STRINGS, fieldnames=columns)

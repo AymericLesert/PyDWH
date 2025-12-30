@@ -28,10 +28,12 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
         row = { 'date': date, 'table': table.name, 'field': self.__field, 'value': '', 'count' : 0 }
         nb_rows = 0
 
-        try:
-            os.makedirs(os.path.dirname(self.__csv_file), exist_ok=True)
-        except:
-            pass
+        directory = os.path.dirname(self.__csv_file)
+        if directory != '':
+            try:
+                os.makedirs(directory, exist_ok=True)
+            except:
+                pass
 
         add_header = not (os.path.exists(self.__csv_file) and os.path.getsize(self.__csv_file) > 0)
         with open(self.__csv_file, 'a', newline='', encoding=self.__encoding) as csvfile:

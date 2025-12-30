@@ -385,6 +385,9 @@ class DWHInstance(DWHLoggerObject):
             for exception in exceptions:
                 self.error(f"- {exception.record}")
 
+    def markdown(self, directory):
+        pass
+
     def close(self):
         self.info("Closing the instance ...")
 

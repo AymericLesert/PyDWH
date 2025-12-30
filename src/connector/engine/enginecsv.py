@@ -6,6 +6,7 @@ This module describes the engine for csv files.
 """
 
 import csv
+import os
 
 from connector.engine.engine import DWHConnectorDatabaseEngine
 from connector.database.record import DWHConnectorDatabaseRecord
@@ -66,11 +67,27 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
             header = next(csv_handle)
         elif mode == DWHConnectorDatabaseEngineCSV.CSVWrite:
             self.verbose(f"Writing the file '{file['filename']}' ...")
+
+            directory = os.path.dirname(file['filename'])
+            if directory != '':
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                except:
+                    pass
+
             handle = open(file['filename'], 'w', newline='', encoding=file.get('encoding', 'ansi'))
             csv_handle = csv.writer(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
             header = []
         elif mode == DWHConnectorDatabaseEngineCSV.CSVAdd:
             self.verbose(f"Writing the file '{file['filename']}' ...")
+
+            directory = os.path.dirname(file['filename'])
+            if directory != '':
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                except:
+                    pass
+
             handle = open(file['filename'], 'a', newline='', encoding=file.get('encoding', 'ansi'))
             csv_handle = csv.writer(handle, delimiter = file.get('delimiter', ','), quoting = file.get('quoting', csv.QUOTE_NONE))
             header = []
