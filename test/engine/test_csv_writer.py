@@ -33,7 +33,7 @@ engine.open()
 engine.info(engine.get_tables())
 for name in engine.get_tables():
     engine.info(f"Nb rows : {engine.count_rows(name)}")
-    for row in engine.get_table(name):
+    for row in engine.get_table(name, ""):
         engine.info(row.to_dict())
 engine.close()
 

@@ -32,8 +32,8 @@ class DWHConnectorDatabaseEngineCSVReader(DWHConnectorDatabaseEngineCSV):
     def get_tables(self):
         return [] if self.__handles is None else [name for name in self.__handles]
 
-    def get_table(self, name):
-        table = super().get_table(name)
+    def get_table(self, name, description):
+        table = super().get_table(name, description)
         if self.__handles is None:
             return table
 

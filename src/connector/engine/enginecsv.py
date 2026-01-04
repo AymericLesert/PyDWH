@@ -43,6 +43,16 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
             self.__handle = handle
 
     @property
+    def type(self):
+        """Type of the source"""
+        return "CSV"
+
+    @property
+    def properties(self):
+        """Properties of the source"""
+        return [(name, properties) for name, properties in self.__files.items()]
+
+    @property
     def files(self):
         return self.__files
 
@@ -114,8 +124,8 @@ class DWHConnectorDatabaseEngineCSV(DWHConnectorDatabaseEngine):
     def get_tables(self):
         return [name for name in self.__files]
 
-    def get_table(self, name):
-        return super().get_table(name)
+    def get_table(self, name, description):
+        return super().get_table(name, description)
 
     def read(self, table):
         return super().read(table)

@@ -14,6 +14,7 @@ def execute():
     parser = argparse.ArgumentParser(description="Run rules towards DataWareHouse")
     parser.add_argument('--config', type=str, required=True, help="Configuration file")
     parser.add_argument('--instance', type=str, required=False, help="Instance name")
+    parser.add_argument('--nodoc', type=bool, required=False, help="Instance name")
     args = parser.parse_args()
 
     Date.NOW = datetime.datetime.now()
@@ -34,7 +35,7 @@ def execute():
     # Execute application
 
     application = DWHApplication(configuration)
-    application.execute(args.instance)
+    application.execute(args.instance, args.nodoc)
 
     logger.close()
 

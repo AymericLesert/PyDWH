@@ -7,16 +7,18 @@ This module describes the list of instances.
 
 
 import os
+
 from tools.smtp import MailSender
+from tools.markdown import Markdown
 from logger.loggerobject import DWHLoggerObject
 from instance.instance import DWHInstance
 
 class DWHApplication(DWHLoggerObject):
-    def execute(self, instance_name):
+    def execute(self, instance_name, nodoc):
         # Initialize documentation markdown
 
         markdown_file = None
-        if self.__markdown_homepage is not None and self.__markdown_title is not None:
+        if (nodoc is None or nodoc == False) and self.__markdown_homepage is not None and self.__markdown_title is not None:
             self.info(f"Creating homepage '{self.__markdown_title}' ...")
 
             directory = os.path.dirname(self.__markdown_homepage)
@@ -70,10 +72,14 @@ class DWHApplication(DWHLoggerObject):
                 # Generate documentation if needed
 
                 if markdown_file is not None:
-                    instance.markdown(os.path.dirname(self.__markdown_homepage))
+                    link = instance.markdown(os.path.dirname(self.__markdown_homepage))
+                    if link is not None:
+                        markdown_file.write(f"- [{instance.name.upper()}]({link})\n")
+                    
 
         if markdown_file is not None:
             markdown_file.close()
+            Markdown.Convert(self.__markdown_homepage)
 
     def __init__(self, configuration):
         super().__init__("DWH")

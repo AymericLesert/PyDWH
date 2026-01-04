@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -28,6 +28,10 @@ class DWHRule(DWHLoggerObject):
     def execute(self):
         """Execute a technical or functional rule"""
         return False
+
+    def markdown(self, directory):
+        """Get the markdown documentation of the rule"""
+        return None
 
     def __init__(self, name):
         super().__init__(name)

@@ -16,6 +16,18 @@ class DWHConnectorDatabaseFieldDateTime(DWHConnectorDatabaseField):
         """Get the type of the field"""
         return "DateTime"
 
+    @property
+    def format(self):
+        """Get the format of the field"""
+        return Date.DATETIME
+
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldDateTime(table,
+                                                 self.name,
+                                                 self.is_null,
+                                                 self.default_value,
+                                                 self.description)
+
     def to_mysql(self):
         return super().to_mysql("datetime")
 
@@ -30,7 +42,7 @@ class DWHConnectorDatabaseFieldDateTime(DWHConnectorDatabaseField):
         # TODO: improve type conversion
         return value
 
-    def __init__(self, table, name, is_null = True, default_value = None, **kwargs):
+    def __init__(self, table, name, is_null = True, default_value = None, description = "", **kwargs):
         if not is_null and default_value is None:
             default_value = Date.NOW
-        super().__init__(table, name, is_null, default_value)
+        super().__init__(table, name, is_null, default_value, description)

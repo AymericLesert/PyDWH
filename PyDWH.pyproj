@@ -102,6 +102,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="src\scripts\__init__.py" />
+    <Compile Include="src\tools\markdown.py" />
     <Compile Include="src\tools\date.py" />
     <Compile Include="src\tools\smtp.py" />
     <Compile Include="src\tools\__init__.py" />

@@ -15,6 +15,18 @@ class DWHConnectorDatabaseFieldBoolean(DWHConnectorDatabaseField):
         """Get the type of the field"""
         return "Boolean"
 
+    @property
+    def format(self):
+        """Get the format of the field"""
+        return "True / False"
+
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldBoolean(table,
+                                                self.name,
+                                                self.is_null,
+                                                self.default_value,
+                                                self.description)
+
     def to_mysql(self):
         return super().to_mysql("tinyint")
 
@@ -29,7 +41,7 @@ class DWHConnectorDatabaseFieldBoolean(DWHConnectorDatabaseField):
         # TODO: improve type conversion
         return value
 
-    def __init__(self, table, name, is_null = True, default_value = None, **kwargs):
+    def __init__(self, table, name, is_null = True, default_value = None, description = "", **kwargs):
         if not is_null and default_value is None:
             default_value = False
-        super().__init__(table, name, is_null, default_value)
+        super().__init__(table, name, is_null, default_value, description)

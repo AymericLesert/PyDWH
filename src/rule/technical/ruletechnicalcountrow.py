@@ -18,7 +18,7 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
 
     @property
     def description(self):
-        return "Cette règle est utilisée pour suivre la progression du nombre de lignes dans la table"
+        return self.__description
 
     def execute(self, table):
         self.info(f"Appending into the CSV file '{self.__csv_file}' ...")
@@ -44,8 +44,14 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
         self.verbose(f"{row['rows']} line(s) in '{row['table']}''")
         return True
 
+    def markdown(self, table, directory):
+        """Get the markdown documentation of the technical rule (counting the number of rows)"""
+        self.__description = f"La table compte {table.count_rows} ligne(s) dans la table."
+        return super().markdown(table, directory)
+
     def __init__(self, name, csv_file, delimiter=';', encoding='utf-8', **kwargs):
         super().__init__(name)
         self.__csv_file = csv_file
         self.__delimiter = delimiter
         self.__encoding = encoding
+        self.__description = "Cette règle compte le nombre de lignes dans la table"

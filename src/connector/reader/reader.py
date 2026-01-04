@@ -32,7 +32,7 @@ class DWHConnectorReader(DWHLoggerObject):
         schema = DWHConnectorDatabaseSchema(self.name)
 
         for name in self.__engine.get_tables():
-            schema.add(self.__engine.get_table(name))
+            schema.add(self.__engine.get_table(name, ""))
 
         return schema
 
@@ -43,6 +43,18 @@ class DWHConnectorReader(DWHLoggerObject):
     def read(self, table):
         """Iterator on the source (get the list of records from the table)"""
         return self.__engine.read(table)
+
+    def markdown(self, markdown_file, directory):
+        """Generate the markdown documentation for the reader"""
+        properties = self.__engine.properties
+
+        if len(properties) == 0:
+            markdown_file.write(f"| {self.name.upper()} | {self.__engine.type} | | |\n")
+            return
+
+        for key, property in properties:
+            values = "<br>".join([f"{item_key}: {item_value}" for item_key, item_value in property.items()])
+            markdown_file.write(f"| {self.name.upper()} | {self.__engine.type} | {key} | {values} |\n")
 
     def close(self):
         self.info("Closing the reader ...")

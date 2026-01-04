@@ -36,6 +36,10 @@ class DWHRuleFunctional(DWHRule):
 
         return record
 
+    def markdown(self, directory):
+        """Get the markdown documentation of the rule"""
+        return super().markdown(directory)
+
     def __init__(self, name, table, field, description):
         super().__init__(name)
         self.__table = table

@@ -17,11 +17,31 @@ class DWHConnectorDatabaseFieldJSON(DWHConnectorDatabaseField):
         return "JSON"
 
     @property
+    def length(self):
+        """Get the max length of the field"""
+        return self.__length
+
+    @property
     def default_value(self):
         """Get the default value of the field"""
         if not super().is_null and super().default_value is None:
             return {}
         return super().default_value
+
+    @property
+    def format(self):
+        """Get the format of the field"""
+        if self.length == 0:
+            return "Unlimited length"
+        return f"Max length {self.length}"
+
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldJSON(table,
+                                             self.name,
+                                             self.length,
+                                             self.is_null,
+                                             self.default_value,
+                                             self.description)
 
     def to_mysql(self):
         return super().to_mysql(f"varchar({self.length})")
@@ -39,5 +59,6 @@ class DWHConnectorDatabaseFieldJSON(DWHConnectorDatabaseField):
             return json.loads(value.strip())
         return value
 
-    def __init__(self, table, name, length = 0, is_null = True, default_value = None, **kwargs):
-        super().__init__(table, name, is_null, default_value)
+    def __init__(self, table, name, length = 0, is_null = True, default_value = None, description = "", **kwargs):
+        super().__init__(table, name, is_null, default_value, description)
+        self.__length = length if length is not None else 0

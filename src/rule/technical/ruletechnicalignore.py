@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -12,7 +12,7 @@ class DWHRuleTechnicalIgnore(DWHRuleTechnical):
 
     @property
     def description(self):
-        return "Comme la table ne présente pas d'intérêts, nous allons l'ignorer."
+        return "Nous ignorons la table car elle ne présente pas d'intérêts"
 
     @property
     def ignore(self):
@@ -21,6 +21,10 @@ class DWHRuleTechnicalIgnore(DWHRuleTechnical):
     def execute(self, table):
         self.info(f"Ignoring table '{table.name}' ...")
         return False
+
+    def markdown(self, table, directory):
+        """Get the markdown documentation of the technical rule (ignoring this table)"""
+        return super().markdown(table, directory)
 
     def __init__(self, name, **kwargs):
         super().__init__(name)

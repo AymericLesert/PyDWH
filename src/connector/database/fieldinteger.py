@@ -15,6 +15,13 @@ class DWHConnectorDatabaseFieldInteger(DWHConnectorDatabaseField):
         """Get the type of the field"""
         return "Integer"
 
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldInteger(table,
+                                                self.name,
+                                                self.is_null,
+                                                self.default_value,
+                                                self.description)
+
     def to_mysql(self):
         return super().to_mysql("int")
 
@@ -31,7 +38,7 @@ class DWHConnectorDatabaseFieldInteger(DWHConnectorDatabaseField):
             return value
         return int(value)
 
-    def __init__(self, table, name, is_null = True, default_value = None, **kwargs):
+    def __init__(self, table, name, is_null = True, default_value = None, description = "", **kwargs):
         if not is_null and default_value is None:
             default_value = 0
-        super().__init__(table, name, is_null, default_value)
+        super().__init__(table, name, is_null, default_value, description)

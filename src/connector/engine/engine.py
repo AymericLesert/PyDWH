@@ -25,6 +25,16 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
         """Get the name of the source"""
         return self.__name
 
+    @property
+    def type(self):
+        """Type of the source"""
+        return ""
+
+    @property
+    def properties(self):
+        """Properties of the source"""
+        return []
+
     def get_password(self, encrypted_password):
         """Decrypt and return the password"""
         if encrypted_password == "" or encrypted_password is None:
@@ -54,8 +64,8 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
     def get_tables(self):
         return []
 
-    def get_table(self, name):
-        return DWHConnectorDatabaseTable(self, name)
+    def get_table(self, name, description):
+        return DWHConnectorDatabaseTable(self, name, description)
 
     def read(self, table):
         return None
@@ -77,6 +87,10 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
 
     def commit(self):
         self.verbose(f"Committing ...")
+
+    def markdown(self, markdown_file, directory):
+        """Generate the markdown documentation for the engine"""
+        pass
 
     def close(self):
         self.info("Closing the engine ...")

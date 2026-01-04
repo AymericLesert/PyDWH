@@ -5,9 +5,13 @@
 This module describes the list of instances.
 """
 
+from hmac import new
+import os
+
 from exception.exceptionrule import DWHExceptionRule
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
 
+from tools.markdown import Markdown
 from logger.loggerobject import DWHLoggerObject
 
 from connector.database.schema import DWHConnectorDatabaseSchema
@@ -137,9 +141,10 @@ class DWHInstance(DWHLoggerObject):
             # Creating the table into the schema
 
             table_name = table_cfg.get('name', '')
+            table_description = table_cfg.get('description', None)
             self.info(f"Adding table '{table_name}' to the target schema ...")
 
-            table = schema.add(DWHConnectorDatabaseTable(connector, table_name))
+            table = schema.add(DWHConnectorDatabaseTable(connector, table_name, table_description))
             table.from_tables = table_cfg.get('from', [])
 
             # Defining the structure of the table
@@ -234,9 +239,16 @@ class DWHInstance(DWHLoggerObject):
 
             table = self.__schema.tables[name]
 
-            # Set the filter on table
+            # Set the properties of the table
 
+            table.description = cfg.get('description', None)
             table.filter = cfg.get('filter', None)
+
+            # Set the properties of the fields
+
+            for field_name, field_cfg in cfg.get('fields', {}).items():
+                if field_cfg is not None and field_name in table.fields:
+                    table.fields[field_name].description = field_cfg.get('description', None)
 
             # Set the list of keys
 
@@ -255,8 +267,8 @@ class DWHInstance(DWHLoggerObject):
         fields_unknwon = []
         for table in self.__schema.tables.values():
             fields = {}
-            for name in self.__tables[table.name].get('fields', []):
-                fields[name] = True
+            for name, cfg in self.__tables[table.name].get('fields', {}).items():
+                fields[name] = cfg
 
             # Remove all fields not described into tables configuration
 
@@ -306,7 +318,7 @@ class DWHInstance(DWHLoggerObject):
 
         self.info(f"Analyzing table '{table_name}' ...")
 
-        table = self.__schema.tables[table_name]
+        table = self.schema.tables[table_name]
 
         # TODO : check keys
 
@@ -386,7 +398,63 @@ class DWHInstance(DWHLoggerObject):
                 self.error(f"- {exception.record}")
 
     def markdown(self, directory):
-        pass
+        if directory is None:
+            return None
+
+        self.info(f"Creating markdown documentation for instance '{self.name}' ...")
+
+        new_directory = os.path.join(directory, self.name)
+        try:
+            os.makedirs(new_directory, exist_ok=True)
+        except:
+            self.exception(f"Unable to create directory '{new_directory}' for markdown instance")
+
+        markdown_filename = os.path.join(directory, self.name, 'home.md')
+        markdown_file = open(markdown_filename, 'w', encoding='utf-8')
+        markdown_file.write(f"# INSTANCE {self.name.upper()}\n\n")
+        if self.__description is not None:
+            markdown_file.write(f"{self.__description}\n\n")
+            
+        markdown_file.write("## Les sources\n\n")
+        markdown_file.write("| Nom | Type | Clé | Propriétés |\n")
+        markdown_file.write("| :---: | :----: | :---: | :----- |\n")
+        for source in self.__sources:
+            source.markdown(markdown_file, new_directory)
+        markdown_file.write("\n")
+
+        markdown_file.write("## Les données d'origine\n\n")
+        for table in self.schema.tables.values():
+            rules = []
+            table_cfg = self.__tables[table.name]
+
+            for rule_name, rule in table_cfg.get('rules', {}).items():
+                new_rule = self.__rule_technical_factory(rule_name, rule)
+                if new_rule is None:
+                    continue
+                rules.append(new_rule)
+
+            link = os.path.join("01-Sources", table.markdown(os.path.join(new_directory, "01-Sources"), rules))
+            markdown_file.write(f"- [{table.name}]({link})\n")
+
+        markdown_file.write("## Règles de transformation\n\n")
+        for rule in self.__rules:
+            link = rule.markdown(os.path.join(new_directory, "02-Regle"))
+            if link is not None:
+                markdown_file.write(f"- [{rule.name}]({os.path.join("02-Regle", link)}) : {rule.description}\n")
+            else:
+                markdown_file.write(f"- {rule.name} : {rule.description}\n")
+
+        markdown_file.write("## Les données disponibles\n\n")
+        markdown_file.write("| Nom | Type | Clé | Propriétés |\n")
+        markdown_file.write("| :---: | :----: | :---: | :----- |\n")
+        for target in self.__targets:
+            target.markdown(markdown_file, new_directory, "03-Destination")
+        markdown_file.write("\n")
+
+        markdown_file.close()
+        Markdown.Convert(markdown_filename)
+
+        return os.path.join(self.name, 'home.md')
 
     def close(self):
         self.info("Closing the instance ...")
@@ -421,6 +489,7 @@ class DWHInstance(DWHLoggerObject):
         self.__reports = {}
         self.__fields_unknown = {}
         self.__mailer = mailer
+        self.__description = configuration.get('description', None)
 
         # Creation des sources
 

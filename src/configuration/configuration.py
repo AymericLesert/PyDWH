@@ -51,7 +51,7 @@ class DWHConfiguration:
         if filename is not None:
             items = filename
 
-        if isinstance(items, str):
+        if isinstance(items, str) and items[-4:] == '.yml':
             filename = None
             if os.path.exists(items) and os.path.isfile(items):
                 filename = items

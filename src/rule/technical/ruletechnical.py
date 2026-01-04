@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=bare-except
 
 """
@@ -16,6 +16,10 @@ class DWHRuleTechnical(DWHRule):
 
     def execute(self, table):
         return False
+
+    def markdown(self, table, directory):
+        """Get the markdown documentation of the technical rule"""
+        return super().markdown(directory)
 
     def __init__(self, name):
         super().__init__(name)

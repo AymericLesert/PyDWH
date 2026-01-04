@@ -25,6 +25,20 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
         return self.__name
 
     @property
+    def description(self):
+        """Get the description of the field"""
+        return self.__description
+
+    @description.setter
+    def description(self, description):
+        self.__description = description
+
+    @property
+    def format(self):
+        """Get the format of the field"""
+        return ""
+
+    @property
     def type(self):
         """Get the type of the field"""
         return None
@@ -56,6 +70,13 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
                 table_name= DWHConnectorDatabaseField.ALL_TABLES
                 field_name = field
             self.__from_fields.append((table_name, field_name))
+
+    def copy(self, table):
+        return DWHConnectorDatabaseField(table,
+                                         self.__name,
+                                         self.__is_null,
+                                         self.__default_value,
+                                         self.__description)
 
     def convert(self, value):
         """Convert the value to the field type"""
@@ -131,10 +152,11 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
 
         return [f"\"{self.name}\"", type_postgresql, default_value, not_null]
 
-    def __init__(self, table, name, is_null, default_value):
+    def __init__(self, table, name, is_null, default_value, description = ""):
         super().__init__(f"{table.connector.name}.{table.name}.{name}")
         self.__table = table
         self.__name = name
+        self.__description = description
         self.__is_null = is_null
         self.__default_value = default_value
-        self.__from_fields = {}
+        self.__from_fields = None

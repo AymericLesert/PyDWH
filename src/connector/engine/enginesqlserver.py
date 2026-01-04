@@ -64,6 +64,16 @@ class DWHConnectorDatabaseEngineSQLServer(DWHConnectorDatabaseEngine):
             self.__cursor = cursor
             self.__dwh = dwh
 
+    @property
+    def type(self):
+        """Type of the source"""
+        return "SQL Server"
+
+    @property
+    def properties(self):
+        """Properties of the source"""
+        return [(self.__database, { 'host': f"{self.__host}:{self.__port}", 'database': self.__database, 'username': self.__user})]
+
     def get_request_insert(self, table):
         """Build SQL request"""
 
@@ -116,7 +126,7 @@ class DWHConnectorDatabaseEngineSQLServer(DWHConnectorDatabaseEngine):
 
         # Retrieve the description of the existing table
 
-        existing_table = self.get_table(table.name)
+        existing_table = self.get_table(table.name, table.description)
         existing_fields = { field.name: field.to_SQLServer() for field in existing_table.fields.values() }
 
         # Update the schema if something changes
@@ -178,9 +188,9 @@ class DWHConnectorDatabaseEngineSQLServer(DWHConnectorDatabaseEngine):
         cursor_table.close()
         return tables
 
-    def get_table(self, name):
+    def get_table(self, name, description):
         self.verbose(f"Describing the table '{name}' ...'")
-        table = super().get_table(name)
+        table = super().get_table(name, description)
         cursor_column = self.execute("SELECT COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH," + \
                                              "NUMERIC_PRECISION,NUMERIC_SCALE,IS_NULLABLE,COLUMN_DEFAULT " + \
                                      "FROM INFORMATION_SCHEMA.COLUMNS " + \

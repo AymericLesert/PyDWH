@@ -10,6 +10,7 @@ import csv
 import datetime
 
 from tools.date import Date
+from tools.markdown import Markdown
 
 from rule.technical.ruletechnical import DWHRuleTechnical
 
@@ -18,7 +19,7 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
 
     @property
     def description(self):
-        return "Cette règle est utilisée pour suivre la progression du nombre de lignes dans la table"
+        return self.__description
 
     def execute(self, table):
         self.info(f"Appending into the CSV file '{self.__csv_file}' ...")
@@ -50,9 +51,44 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
         self.verbose(f"{nb_rows} values(s) in '{row['table']}.{row['field']}''")
         return True
 
+    def markdown(self, table, directory):
+        """Get the markdown documentation of the technical rule (counting the list of values)"""
+        if directory is None and self.__field not in table.fields:
+            return None
+
+        self.info(f"Creating markdown documentation for the field '{table.name}.{self.__field}' ...")
+
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except:
+            self.exception(f"Unable to create directory '{directory}' for markdown field")
+
+        markdown_filename = os.path.join(directory, self.__field + '.md')
+        markdown_file = open(markdown_filename, 'w', encoding='utf-8')
+        markdown_file.write(f"# Valeur du champ '{table.name}.{self.__field}'\n\n")
+
+        description = table.fields[self.__field].description
+        if description is not None and description != "":
+            markdown_file.write(f"**description** : {description}\n\n")
+            
+        markdown_file.write("| Valeur | Nombre d'enregistrements |\n")
+        markdown_file.write("| :--- | :----: |\n")
+
+        nb_rows = 0
+        for line in table.get_distinct_values(self.__field):
+            markdown_file.write(f"| {line[0]} | {line[1]} |\n")
+            nb_rows += 1
+        self.__description = f"Le champ '{table.name}.{self.__field}' contient {nb_rows} valeurs distinctes"
+
+        markdown_file.close()
+        Markdown.Convert(markdown_filename)
+
+        return os.path.join(table.name, self.__field + '.md')
+
     def __init__(self, name, csv_file, delimiter=';', encoding='utf-8', field = None, **kwargs):
         super().__init__(name)
         self.__csv_file = csv_file
         self.__delimiter = delimiter
         self.__encoding = encoding
         self.__field = field
+        self.__description = f"Cette règle extrait les valeurs distinctes de la colonne '{self.__field}' dans la table"

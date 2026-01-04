@@ -50,6 +50,11 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
 
         return record
 
+    def markdown(self, directory):
+        """Get the markdown documentation of the rule"""
+        # TODO
+        return super().markdown(directory)
+
     def __init__(self, name, table, field, regex, description = "", values = {}, **kwargs):
         super().__init__(name, table, field, description)
         self.__regex = re.compile(regex)

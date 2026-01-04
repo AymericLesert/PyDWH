@@ -40,10 +40,10 @@ class DWHConnectorDatabaseSchema(DWHLoggerObject):
 
     def append(self, schema):
         for table in schema.tables.values():
-            new_table = DWHConnectorDatabaseTable(table.connector, table.name)
+            new_table = DWHConnectorDatabaseTable(table.connector, table.name, table.description)
             self.__tables[new_table.name] = new_table
-            for field_name, field in table.fields.items():
-                new_table.add(field_name, field.type)
+            for field in table.fields.values():
+                new_table.add_field(field)
 
     def remove(self, name):
         if name not in self.__tables:

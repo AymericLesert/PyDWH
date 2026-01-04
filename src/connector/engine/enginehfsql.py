@@ -48,6 +48,16 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             self.__record = record
             self.__cursor = cursor
 
+    @property
+    def type(self):
+        """Type of the source"""
+        return "HF SQL"
+
+    @property
+    def properties(self):
+        """Properties of the source"""
+        return [(self.__database, { 'data_source': self.__data_source, 'database': self.__database, 'username': self.__username})]
+
     def open(self):
         """Connect to the OLE database"""
         super().open()
@@ -93,9 +103,9 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         cursor_table.Close()
         return tables
 
-    def get_table(self, name):
+    def get_table(self, name, description):
         self.verbose(f"Describing the table '{name}' ...'")
-        table = super().get_table(name)
+        table = super().get_table(name, description)
         cursor_column = self.execute(f"SELECT * FROM {table.name} WHERE 1 == 0")
         if cursor_column is None:
             return table

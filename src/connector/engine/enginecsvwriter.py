@@ -49,7 +49,7 @@ class DWHConnectorDatabaseEngineCSVWriter(DWHConnectorDatabaseEngineCSV):
 
         # Retrieve the description of the existing table
 
-        existing_table = self.get_table(table.name)
+        existing_table = self.get_table(table.name, table.description)
         existing_fields = sorted([ field.name for field in existing_table.fields.values() ])
 
         # Check if the header changes
@@ -118,8 +118,8 @@ class DWHConnectorDatabaseEngineCSVWriter(DWHConnectorDatabaseEngineCSV):
                 tables.append(name)
         return tables
 
-    def get_table(self, name):
-        table = super().get_table(name)
+    def get_table(self, name, description):
+        table = super().get_table(name, description)
         if name not in self.files:
             return table
 
