@@ -56,34 +56,23 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
         if directory is None and self.__field not in table.fields:
             return None
 
-        self.info(f"Creating markdown documentation for the field '{table.name}.{self.__field}' ...")
-
-        try:
-            os.makedirs(directory, exist_ok=True)
-        except:
-            self.exception(f"Unable to create directory '{directory}' for markdown field")
-
-        markdown_filename = os.path.join(directory, self.__field + '.md')
-        markdown_file = open(markdown_filename, 'w', encoding='utf-8')
-        markdown_file.write(f"# Valeur du champ '{table.name}.{self.__field}'\n\n")
+        md = Markdown(directory, os.path.join(table.name, self.__field + '.md'))
+        md.title(f"Valeur du champ '{table.name}.{self.__field}'")
 
         description = table.fields[self.__field].description
         if description is not None and description != "":
-            markdown_file.write(f"**description** : {description}\n\n")
-            
-        markdown_file.write("| Valeur | Nombre d'enregistrements |\n")
-        markdown_file.write("| :--- | :----: |\n")
+            md.paragraph(f"**description** : {description}")
+            md.paragraph()
 
-        nb_rows = 0
-        for line in table.get_distinct_values(self.__field):
-            markdown_file.write(f"| {line[0]} | {line[1]} |\n")
-            nb_rows += 1
-        self.__description = f"Le champ '{table.name}.{self.__field}' contient {nb_rows} valeurs distinctes"
+        rows = sorted(table.get_distinct_values(self.__field), key = lambda x: -x[1])
+        md.table({
+                    'Value': { 'title': 'Valeur', 'align': Markdown.LEFT},
+                    'Count': { 'title': 'Nombre d\'enregistrements', 'align': Markdown.CENTER}
+                 }, rows)
 
-        markdown_file.close()
-        Markdown.Convert(markdown_filename)
+        self.__description = f"Le champ '{table.name}.{self.__field}' contient {len(rows)} valeurs distinctes"
 
-        return os.path.join(table.name, self.__field + '.md')
+        return md.close()
 
     def __init__(self, name, csv_file, delimiter=';', encoding='utf-8', field = None, **kwargs):
         super().__init__(name)

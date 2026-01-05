@@ -155,76 +155,75 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         return self.__rows
 
     def markdown(self, directory, rules = []):
-        def write_fields(markdown_file, table, fields):
-            from_fields = ""
-            from_separation = ""
-            if table.from_tables:
-                from_fields = " Issu de |"
-                from_separation = " :--- |"
-
-            markdown_file.write(f"| Nom | Type | Description | Format | Null ? | Valeur par défaut |{from_fields}\n")
-            markdown_file.write(f"| :--- | :---: | :--- | :--- | :---: | :--- |{from_separation}\n")
+        def get_rows(fields):
+            rows = []
             for field in fields:
-                from_item=""
-                if table.from_tables:
-                    from_item = "<br>".join([f"{item[0]}.{item[1]}" for item in field.from_fields]) + " |"
-                markdown_file.write(f"| {field.name} | {field.type} | {field.description} | {field.format} | {'Oui' if field.is_null else 'Non'} | {field.default_value} |{from_item}\n")
-            markdown_file.write("\n")
+                rows.append([field.name, 
+                             field.type, 
+                             field.description, 
+                             field.format, 
+                             'Oui' if field.is_null else 'Non', 
+                             field.default_value, 
+                             [f"{item[0]}.{item[1]}" for item in field.from_fields] if field.from_fields is not None else []])
+            return rows
 
         if directory is None:
             return None
 
-        self.info(f"Creating markdown documentation for table '{self.name}' ...")
-
-        try:
-            os.makedirs(directory, exist_ok=True)
-        except:
-            self.exception(f"Unable to create directory '{directory}' for markdown table")
-
-        markdown_filename = os.path.join(directory, self.name + ".md")
-        markdown_file = open(markdown_filename, 'w', encoding='utf-8')
-        markdown_file.write(f"# Table {self.name}\n\n")
+        md = Markdown(directory, self.name + ".md")
+        md.title(f"Table {self.name}")
         if self.__description is not None:
-            markdown_file.write(f"{self.__description}\n\n")
+            md.paragraph(self.__description)
+            md.paragraph()
 
         if self.__from_tables:
-            markdown_file.write("Les données sont originaires des tables :\n\n")
-            for table_name in self.__from_tables:
-                markdown_file.write(f"- [{table_name}]({os.path.join("..", "..", "01-Sources", table_name + ".md")})\n")
+            md.paragraph("Les données sont originaires des tables :")
+            with md.bullet() as bullet:
+                for table_name in self.__from_tables:
+                    bullet.item(md.link(table_name, os.path.join("..", "..", "01-Sources", table_name + ".md")))
 
         # Keys
 
+        headers = {
+            "Nom": {"title": "Nom", "align": Markdown.LEFT},
+            "Type": {"title": "Type", "align": Markdown.CENTER},
+            "Description": {"title": "Description", "align": Markdown.LEFT},
+            "Format": {"title": "Format", "align": Markdown.LEFT},
+            "Null": {"title": "Null ?", "align": Markdown.CENTER},
+            "Default": {"title": "Valeur par défaut", "align": Markdown.LEFT}
+        }
+        if self.from_tables:
+            headers['From'] = {"title": "Issu de", "align": Markdown.LEFT}
+
         if len(self.__keys) > 0:
-            markdown_file.write("## Liste des clés\n\n")
-            write_fields(markdown_file, self, [field for field in self.__fields.values() if field.name in self.__keys])
+            md.subtitle("Liste des clés")
+            md.table(headers, get_rows([field for field in self.__fields.values() if field.name in self.__keys]))
 
         # Fields
 
         if (len(self.__fields) - len(self.__keys)) > 0:
-            markdown_file.write("## Liste des champs\n\n")
-            write_fields(markdown_file, self, [field for field in self.__fields.values() if field.name not in self.__keys])
+            md.subtitle("Liste des champs")
+            md.table(headers, get_rows([field for field in self.__fields.values() if field.name not in self.__keys]))
 
         # Extends
 
         if len(self.__extends) > 0:
-            markdown_file.write("## Liste des valeurs calculées\n\n")
-            write_fields(markdown_file, self, self.__extends.values())
+            md.subtitle("Liste des valeurs calculées")
+            md.table(headers, get_rows(self.__extends.values()))
 
         # Technical rules
 
         if len(rules) > 0:
-            markdown_file.write("## Règles appliquées\n\n")
-            for rule in rules:
-                link = rule.markdown(self, os.path.join(directory, self.name))
-                if link is not None:
-                    markdown_file.write(f"- [{rule.name}]({link}) : {rule.description}\n")
-                else:
-                    markdown_file.write(f"- {rule.name} : {rule.description}\n")
+            md.subtitle("Règles appliquées")
+            with md.bullet() as bullet:
+                for rule in rules:
+                    link = rule.markdown(self, directory)
+                    if link is not None:
+                        bullet.item(f"{md.link(rule.name, link)} : {rule.description}")
+                    else:
+                        bullet.item(f"{rule.name} : {rule.description}")
 
-        markdown_file.close()
-        Markdown.Convert(markdown_filename)
-
-        return self.name + ".md"
+        return md.close()
 
     def __iter__(self):
         """Iterator on the records from the table"""

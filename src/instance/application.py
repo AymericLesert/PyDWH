@@ -17,22 +17,17 @@ class DWHApplication(DWHLoggerObject):
     def execute(self, instance_name, nodoc):
         # Initialize documentation markdown
 
-        markdown_file = None
+        md = None
+        bullet = None
+
         if (nodoc is None or nodoc == False) and self.__markdown_homepage is not None and self.__markdown_title is not None:
-            self.info(f"Creating homepage '{self.__markdown_title}' ...")
-
-            directory = os.path.dirname(self.__markdown_homepage)
-            if directory != '':
-                try:
-                    os.makedirs(directory, exist_ok=True)
-                except:
-                    self.exception(f"Unable to create directory '{directory}' for markdown homepage")
-
-            markdown_file = open(self.__markdown_homepage, 'w', encoding='utf-8')
-            markdown_file.write(f"# {self.__markdown_title}\n\n")
+            md = Markdown(os.path.dirname(self.__markdown_homepage), os.path.basename(self.__markdown_homepage))
+            md.title(self.__markdown_title)
             if self.__markdown_description is not None:
-                markdown_file.write(f"{self.__markdown_description}\n\n")
-            markdown_file.write("## Instances\n\n")
+                md.paragraph(self.__markdown_description)
+            md.subtitle("Instances")
+            bullet = md.bullet()
+            bullet.start()
 
         # Execute all instances
 
@@ -71,15 +66,15 @@ class DWHApplication(DWHLoggerObject):
 
                 # Generate documentation if needed
 
-                if markdown_file is not None:
+                if bullet is not None:
                     link = instance.markdown(os.path.dirname(self.__markdown_homepage))
                     if link is not None:
-                        markdown_file.write(f"- [{instance.name.upper()}]({link})\n")
+                        bullet.item(md.link(instance.name.upper(), link))
                     
 
-        if markdown_file is not None:
-            markdown_file.close()
-            Markdown.Convert(self.__markdown_homepage)
+        if md is not None:
+            bullet.end()
+            md.close()
 
     def __init__(self, configuration):
         super().__init__("DWH")

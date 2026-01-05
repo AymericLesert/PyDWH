@@ -6,12 +6,10 @@ This module describes the loader component.
 """
 
 import os
-from pickle import MARK
 from cryptography.fernet import Fernet
 from logger.loggerobject import DWHLoggerObject
 
 from tools.date import Date
-from tools.markdown import Markdown
 
 from connector.database.field import DWHConnectorDatabaseField
 from connector.database.record import DWHConnectorDatabaseRecord
@@ -35,6 +33,25 @@ class DWHConnectorWriter(DWHLoggerObject):
     def description(self):
         """Get the description of the target"""
         return { "name": self.name }
+
+    @property
+    def properties(self):
+        """Generate the markdown documentation for the writer"""
+        properties = self.__engine.properties
+        if len(properties) == 0:
+            return [{
+                        'Name': self.name.upper(),
+                        'Type': self.__engine.type
+                    }]
+        values = []
+        for key, property in properties:
+            values.append({
+                'Name': self.name.upper(),
+                'Type': self.__engine.type,
+                'Key': key,
+                'Properties': [f"{item_key}: {item_value}" for item_key, item_value in property.items()]
+            })
+        return values
 
     @property
     def schema(self):
@@ -201,44 +218,6 @@ class DWHConnectorWriter(DWHLoggerObject):
         for table in self.__schema.tables.values():
             self.commit_table(table)
             table.clear()
-
-    def markdown(self, markdown_file, directory, sub_directory):
-        """Generate the markdown documentation for the writer"""
-        link = None
-        if self.__schema is not None:
-            self.info(f"Creating markdown documentation for writer '{self.name}' ...")
-
-            new_directory = os.path.join(directory, sub_directory, self.name)
-            try:
-                os.makedirs(new_directory, exist_ok=True)
-            except:
-                self.exception(f"Unable to create directory '{new_directory}' for markdown instance")
-
-            markdown_filename = os.path.join(new_directory, "home.md")
-            markdown_subfile = open(markdown_filename, 'w', encoding='utf-8')
-            markdown_subfile.write(f"# Liste des tables de {self.name}\n\n")
-            for table in self.__schema.tables.values():
-                link = table.markdown(new_directory)
-                markdown_subfile.write(f"- [{table.name}]({link})\n")
-            markdown_subfile.close()
-            Markdown.Convert(markdown_filename)
-            link = os.path.join(sub_directory, self.name, "home.md")
-
-        properties = self.__engine.properties
-
-        if len(properties) == 0:
-            if link is not None:
-                markdown_file.write(f"| [{self.name.upper()}]({link}) | {self.__engine.type} | | |\n")
-            else:
-                markdown_file.write(f"| {self.name.upper()} | {self.__engine.type} | | |\n")
-            return
-
-        for key, property in properties:
-            values = "<br>".join([f"{item_key}: {item_value}" for item_key, item_value in property.items()])
-            if link is not None:
-                markdown_file.write(f"| [{self.name.upper()}]({link}) | {self.__engine.type} | {key} | {values} |\n")
-            else:
-                markdown_file.write(f"| {self.name.upper()} | {self.__engine.type} | {key} | {values} |\n")
 
     def close(self):
         self.info(f"Closing the writer ...")

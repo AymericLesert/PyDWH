@@ -5,7 +5,7 @@
 This module describes the list of instances.
 """
 
-from hmac import new
+from calendar import c
 import os
 
 from exception.exceptionrule import DWHExceptionRule
@@ -401,60 +401,86 @@ class DWHInstance(DWHLoggerObject):
         if directory is None:
             return None
 
-        self.info(f"Creating markdown documentation for instance '{self.name}' ...")
-
-        new_directory = os.path.join(directory, self.name)
-        try:
-            os.makedirs(new_directory, exist_ok=True)
-        except:
-            self.exception(f"Unable to create directory '{new_directory}' for markdown instance")
-
-        markdown_filename = os.path.join(directory, self.name, 'home.md')
-        markdown_file = open(markdown_filename, 'w', encoding='utf-8')
-        markdown_file.write(f"# INSTANCE {self.name.upper()}\n\n")
+        subdirectory = os.path.join(directory, self.name)
+        md = Markdown(directory, os.path.join(self.name, 'home.md'))
+        md.title(f"Instance {self.name}")
         if self.__description is not None:
-            markdown_file.write(f"{self.__description}\n\n")
+            md.paragraph(self.__description)
+
+        # Create sources part
             
-        markdown_file.write("## Les sources\n\n")
-        markdown_file.write("| Nom | Type | Clé | Propriétés |\n")
-        markdown_file.write("| :---: | :----: | :---: | :----- |\n")
+        md.subtitle("Les sources")
+
+        properties = []
         for source in self.__sources:
-            source.markdown(markdown_file, new_directory)
-        markdown_file.write("\n")
+            properties.extend(source.properties)
 
-        markdown_file.write("## Les données d'origine\n\n")
-        for table in self.schema.tables.values():
-            rules = []
-            table_cfg = self.__tables[table.name]
+        md.table({
+                'Name': {'title': 'Nom', 'align': Markdown.CENTER},
+                'Type': {'title': 'Type', 'align': Markdown.CENTER},
+                'Key': {'title': 'Clé', 'align': Markdown.CENTER},
+                'Properties': {'title': 'Propriétés', 'align': Markdown.LEFT},
+            }, properties)
 
-            for rule_name, rule in table_cfg.get('rules', {}).items():
-                new_rule = self.__rule_technical_factory(rule_name, rule)
-                if new_rule is None:
-                    continue
-                rules.append(new_rule)
+        # Create origins part
+            
+        md.subtitle("Les données d'origine")
+        with md.bullet() as bullet:
+            for table in self.schema.tables.values():
+                rules = []
+                table_cfg = self.__tables[table.name]
 
-            link = os.path.join("01-Sources", table.markdown(os.path.join(new_directory, "01-Sources"), rules))
-            markdown_file.write(f"- [{table.name}]({link})\n")
+                for rule_name, rule in table_cfg.get('rules', {}).items():
+                    new_rule = self.__rule_technical_factory(rule_name, rule)
+                    if new_rule is None:
+                        continue
+                    rules.append(new_rule)
 
-        markdown_file.write("## Règles de transformation\n\n")
-        for rule in self.__rules:
-            link = rule.markdown(os.path.join(new_directory, "02-Regle"))
-            if link is not None:
-                markdown_file.write(f"- [{rule.name}]({os.path.join("02-Regle", link)}) : {rule.description}\n")
-            else:
-                markdown_file.write(f"- {rule.name} : {rule.description}\n")
+                link = os.path.join("01-Sources", table.markdown(os.path.join(subdirectory, "01-Sources"), rules))
+                bullet.item(md.link(table.name, link))
 
-        markdown_file.write("## Les données disponibles\n\n")
-        markdown_file.write("| Nom | Type | Clé | Propriétés |\n")
-        markdown_file.write("| :---: | :----: | :---: | :----- |\n")
+        # Create transformation rules
+            
+        md.subtitle("Règles de transformation")
+        with md.bullet() as bullet:
+            for rule in self.__rules:
+                link = rule.markdown(os.path.join(subdirectory, "02-Regles"))
+                if link is not None:
+                    bullet.item(md.link(rule.name, os.path.join("02-Regles", link)) + " : " + rule.description)
+                else:
+                    bullet.item(f"{rule.name} : {rule.description}")
+
+        # Create target part
+            
+        md.subtitle("Les données disponibles")
+
+        properties = []
         for target in self.__targets:
-            target.markdown(markdown_file, new_directory, "03-Destination")
-        markdown_file.write("\n")
+            current_properties = target.properties
+            if len(current_properties) > 0 and target.schema is not None:
+                property = current_properties[0]
 
-        markdown_file.close()
-        Markdown.Convert(markdown_filename)
+                md_target = Markdown(subdirectory, os.path.join("03-Destinations", target.name, "home.md"))
+                md_target.title(f"Liste des tables de {target.name}")
+                with md_target.bullet() as bullet:
+                    for table in target.schema.tables.values():
+                        link = table.markdown(os.path.join(subdirectory, "03-Destinations", target.name))
+                        bullet.item(md_target.link(table.name, link))
+                link = md_target.close()
 
-        return os.path.join(self.name, 'home.md')
+                for property in current_properties:
+                    property['Name'] = md.link(property['Name'], link)
+
+            properties.extend(current_properties)
+
+        md.table({
+                'Name': {'title': 'Nom', 'align': Markdown.CENTER},
+                'Type': {'title': 'Type', 'align': Markdown.CENTER},
+                'Key': {'title': 'Clé', 'align': Markdown.CENTER},
+                'Properties': {'title': 'Propriétés', 'align': Markdown.LEFT},
+            }, properties)
+
+        return md.close()
 
     def close(self):
         self.info("Closing the instance ...")
