@@ -37,10 +37,13 @@ class DWHConnectorDatabaseEngine(DWHLoggerObject):
 
     def get_password(self, encrypted_password):
         """Decrypt and return the password"""
-        if encrypted_password == "" or encrypted_password is None:
+        try:
+            if encrypted_password == "" or encrypted_password is None:
+                return encrypted_password
+            cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
+            return cipher_suite.decrypt(bytes(encrypted_password, 'utf-8')).decode('utf-8')
+        except:
             return encrypted_password
-        cipher_suite = Fernet(bytes(os.getenv("DWH_PASSWORD_KEY"), 'utf-8'))
-        return cipher_suite.decrypt(bytes(encrypted_password, 'utf-8')).decode('utf-8')
 
     def get_request_insert(self, table):
         """Build Insert SQL request"""

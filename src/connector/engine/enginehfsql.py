@@ -30,8 +30,8 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         def __next__(self):
             self.__record.clear()
 
-            if self.__cursor.EOF:
-                self.__cursor.Close()
+            if self.__cursor is None or self.__cursor.EOF:
+                self.close()
                 raise StopIteration
 
             table = self.__record.get_table()
@@ -43,9 +43,51 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
 
             self.__cursor.MoveNext()
             return self.__record
+        
+        def close(self):
+            if self.__cursor is not None:
+                self.__cursor.Close()
+            self.__cursor = None
 
         def __init__(self, record, cursor):
             self.__record = record
+            self.__cursor = cursor
+
+    class IteratorCursor:
+        @property
+        def cursor(self):
+            return self.__cursor
+        
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            record = []
+
+            if self.__cursor is None or self.__cursor.EOF:
+                self.close()
+                raise StopIteration
+
+            i = 0
+            while i < self.__cursor.Fields.Count:
+                record.append(self.__cursor.Fields(i).Value)
+                i += 1
+
+            self.__cursor.MoveNext()
+            return record
+        
+        def fetchone(self):
+            return self.__next__()
+
+        def fetchall(self):
+            return [row for row in self]
+        
+        def close(self):
+            if self.__cursor is not None:
+                self.__cursor.Close()
+            self.__cursor = None
+
+        def __init__(self, cursor):
             self.__cursor = cursor
 
     @property
@@ -65,8 +107,10 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         try:
             self.__connexion = win32com.client.Dispatch("ADODB.Connection")
 
-            if self.__directory is not None:
+            if self.__directory is not None and self.__password is None:
                 string_connexion = f"Provider=PCSOFT.HFSQL;Initial Catalog={self.__directory};"
+            elif self.__directory is not None:
+                string_connexion = f"Provider=PCSOFT.HFSQL;Initial Catalog={self.__directory};Extended Properties=\"Password=*:{self.__password}\";"
             elif self.__username is None:
                 string_connexion = f"Provider=PCSOFT.HFSQL;Data source={self.__data_source};Initial Catalog={self.__database};"
             else:
@@ -111,10 +155,10 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             return table
 
         i = 0
-        while i < cursor_column.Fields.Count:
-            column_name = cursor_column.Fields(i).Name
-            column_type = cursor_column.Fields(i).Type
-            column_size = cursor_column.Fields(i).DefinedSize
+        while i < cursor_column.cursor.Fields.Count:
+            column_name = cursor_column.cursor.Fields(i).Name
+            column_type = cursor_column.cursor.Fields(i).Type
+            column_size = cursor_column.cursor.Fields(i).DefinedSize
 
             i += 1
 
@@ -128,7 +172,7 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
                       type = DWHConnectorDatabaseEngineHFSQL.MAP_TYPE[column_type],
                       length = column_size)
  
-        cursor_column.Close()
+        cursor_column.close()
         return table
 
     def read(self, table):
@@ -144,7 +188,7 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
         else:
             cursor = self.execute(f"SELECT {list_fields} FROM {table.name} WHERE {table.filter}")
 
-        return DWHConnectorDatabaseEngineHFSQL.IteratorRecords(DWHConnectorDatabaseRecord(table), cursor)
+        return DWHConnectorDatabaseEngineHFSQL.IteratorRecords(DWHConnectorDatabaseRecord(table), cursor.cursor)
 
     def execute(self, request, values = None):
         super().execute(request, values)
@@ -152,7 +196,7 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             return None
         cursor = win32com.client.Dispatch("ADODB.Recordset")
         cursor.Open(request, self.__connexion, 1, 3)
-        return cursor
+        return DWHConnectorDatabaseEngineHFSQL.IteratorCursor(cursor)
 
     def count_rows(self, table_name, filter = None):
         # table_name is a name of an existing table ... by design (no risk of injection from configuration file)
@@ -160,8 +204,8 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             cursor_table = self.execute(f"SELECT COUNT(*) FROM {table_name}")
         else:
             cursor_table = self.execute(f"SELECT COUNT(*) FROM {table_name} WHERE {filter}")
-        count_rows = cursor_table.Fields(0).Value
-        cursor_table.Close()
+        count_rows = cursor_table.fetchone()[0]
+        cursor_table.close()
         return count_rows
 
     def get_distinct_values(self, table_name, field_name, filter = None):
@@ -171,7 +215,7 @@ class DWHConnectorDatabaseEngineHFSQL(DWHConnectorDatabaseEngine):
             cursor_table = self.execute(f"SELECT DISTINCT({field_name}), COUNT(*) FROM {table_name} WHERE {filter} GROUP BY {field_name}")
 
         values = cursor_table.fetchall()
-        cursor_table.Close()
+        cursor_table.close()
         return values
 
     def rollback(self):

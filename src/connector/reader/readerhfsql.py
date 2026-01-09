@@ -9,9 +9,10 @@ from connector.reader.reader import DWHConnectorReader
 from connector.engine.enginehfsql import DWHConnectorDatabaseEngineHFSQL
 
 class DWHConnectorReaderHFSQLClassique(DWHConnectorReader):
-    def __init__(self, name, directory = None, **kwargs):
+    def __init__(self, name, directory = None, password = None, **kwargs):
         super().__init__(name, DWHConnectorDatabaseEngineHFSQL(name, 
-                                                               directory = directory))
+                                                               directory = directory,
+                                                               password = password))
 
 class DWHConnectorReaderHFSQLClient(DWHConnectorReader):
     def __init__(self, name, data_source = None, username = None, password = None, database = None, **kwargs):
