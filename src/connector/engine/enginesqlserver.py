@@ -72,7 +72,7 @@ class DWHConnectorDatabaseEngineSQLServer(DWHConnectorDatabaseEngine):
     @property
     def properties(self):
         """Properties of the source"""
-        return [(self.__database, { 'host': f"{self.__host}:{self.__port}", 'database': self.__database, 'username': self.__user})]
+        return [(self.__database, { 'host': f"{self.__host}", 'database': self.__database, 'username': self.__user})]
 
     def get_request_insert(self, table):
         """Build SQL request"""

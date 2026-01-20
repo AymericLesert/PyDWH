@@ -13,7 +13,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/scripts/dwh_rules.py",
             "console": "integratedTerminal",
-            "args": "--config ../PyDWHConfig/config.yml --instance DOSFAB"
+            "args": "--config ../PyDWHConfig/config.yml --instance PMI"
         }
     ]
 }
