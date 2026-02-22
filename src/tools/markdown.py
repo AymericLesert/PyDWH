@@ -33,15 +33,16 @@ class Markdown(DWHLoggerObject):
             self.start()
             return self
 
-        def start(self):
-            self.__markdown.paragraph()
+        def start(self, title = ""):
+            if title.strip() != "":
+                self.__markdown.paragraph(title)
 
         def item(self, text):
             indent = "  " * self.__level
-            self.__markdown.paragraph(f"{indent}- {text}")
+            self.__markdown.paragraph(f"{indent}- {text.strip()}")
 
         def end(self):
-            self.__markdown.paragraph()
+            pass
         
         def __exit__(self, *args):
             self.end()
@@ -68,22 +69,22 @@ class Markdown(DWHLoggerObject):
     def title(self, text):
         if self.__file is None:
             return
-        self.__file.write(f"# {text.upper()}\n\n")
+        self.__file.write(f"# {text.strip().upper()}\n\n")
 
     def subtitle(self, text):
         if self.__file is None:
             return
-        self.__file.write(f"## {text}\n\n")
+        self.__file.write(f"\n## {text.strip()}\n\n")
 
     def part(self, text):
         if self.__file is None:
             return
-        self.__file.write(f"### {text}\n\n")
+        self.__file.write(f"\n### {text.strip()}\n\n")
 
     def paragraph(self, text = "\n"):
         if self.__file is None:
             return
-        self.__file.write(f"{text}\n")
+        self.__file.write(f"{text.rstrip()}\n")
 
     def table(self, headers, rows):
         def get_cell(value):
@@ -130,7 +131,6 @@ class Markdown(DWHLoggerObject):
             else:
                 continue
             self.__file.write(f"{row_line}\n")
-        self.__file.write("\n")
 
     def link(self, text, url = None):
         return f"[{text}]({url if url is not None else text})"

@@ -11,6 +11,10 @@ from logger.logger import DWHLogger
 from instance.application import DWHApplication
 
 def execute():
+    # TODO : Add a "Simulation" mode (execute rules without updating data) and "Production" mode
+    # TODO : Within instance, enable nodoc (to avoid to replace the existing description)
+    # The "Simulation" mode is used to validate rules before applying them or testing the implementation
+
     parser = argparse.ArgumentParser(description="Run rules towards DataWareHouse")
     parser.add_argument('--config', type=str, required=True, help="Configuration file")
     parser.add_argument('--instance', type=str, required=False, help="Instance name")

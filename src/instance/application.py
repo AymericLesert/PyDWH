@@ -5,15 +5,18 @@
 This module describes the list of instances.
 """
 
-
 import os
 
-from tools.smtp import MailSender
+from tools.mailsender import MailSender
 from tools.markdown import Markdown
 from logger.loggerobject import DWHLoggerObject
 from instance.instance import DWHInstance
 
 class DWHApplication(DWHLoggerObject):
+    @property
+    def mailer(self):
+        return self.__mailer
+
     def execute(self, instance_name, nodoc):
         # Initialize documentation markdown
 
@@ -35,7 +38,10 @@ class DWHApplication(DWHLoggerObject):
             if instance_name is not None and item.get('name', '') != instance_name:
                 continue
 
-            with DWHInstance(item, self.__mailer) as instance:
+            with DWHInstance(self, item) as instance:
+                if instance.has_error:
+                    self.error(f"An error occurred while initializing the instance '{instance.name}' ... Fix issues before running again this instance !")
+                    continue
 
                 # Update tables into the target
 

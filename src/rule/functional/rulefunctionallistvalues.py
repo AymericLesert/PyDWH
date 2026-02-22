@@ -16,8 +16,9 @@ class DWHRuleFunctionalListValues(DWHRuleFunctional):
         if super().execute(record) is None:
             return None
 
-        if record[self.field].strip() not in self.__values:
-            raise DWHExceptionRule(self, record)
+        value = record[self.field].strip()
+        if value not in self.__values:
+            raise DWHExceptionRule(self, value, record)
 
         return record
 
@@ -26,6 +27,6 @@ class DWHRuleFunctionalListValues(DWHRuleFunctional):
         # TODO
         return super().markdown(directory)
 
-    def __init__(self, name, table, field, description = "", values = [], **kwargs):
-        super().__init__(name, table, field, description)
+    def __init__(self, instance, name, table, field, description = "", notifications = None, values = [], **kwargs):
+        super().__init__(instance, name, table, field, description, notifications)
         self.__values = values

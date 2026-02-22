@@ -1,4 +1,11 @@
-﻿import os
+﻿# -*- coding: utf-8 -*-
+# pylint: disable=bare-except
+
+"""
+This module describes a class sending mail.
+"""
+
+import os
 from re import I
 import smtplib
 import ssl
@@ -9,6 +16,10 @@ from cryptography.fernet import Fernet
 from logger.loggerobject import DWHLoggerObject
 
 class MailSender(DWHLoggerObject):
+    @property
+    def signature(self):
+        return self.__signature
+
     def get_password(self, encrypted_password):
         """Decrypt and return the password"""
         if encrypted_password == "" or encrypted_password is None:
@@ -22,7 +33,7 @@ class MailSender(DWHLoggerObject):
 
             msg = EmailMessage()
             msg["From"] = self.__from_addr
-            msg["To"] = self.__to_addr
+            msg["To"] = self.__to_addr if self.__to_addr is not None else to_addr
             msg["Subject"] = subject
             msg.set_content(corpus)
 
@@ -62,8 +73,10 @@ class MailSender(DWHLoggerObject):
                     serveur.send_message(msg, from_addr=self.__from_addr, to_addrs=to_addr)
 
             self.info(f"Mail '{subject}' to {to_addr} sent")
+            return True
         except:
             self.exception(f"Unable to send mail '{subject}' to {to_addr}")
+            return False
 
     def __init__(self,
                  server = "localhost",
@@ -75,6 +88,7 @@ class MailSender(DWHLoggerObject):
                  ssl = False,
                  starttls = False,
                  timeout = 30,
+                 signature = "",
                  **kwargs):
         """
         use_ssl=True    -> SMTP_SSL (SSL implicite, typiquement port 465)
@@ -94,3 +108,4 @@ class MailSender(DWHLoggerObject):
         self.__timeout = timeout
         self.__from_addr = from_addr
         self.__to_addr = to_addr
+        self.__signature = signature

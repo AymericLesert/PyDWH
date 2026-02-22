@@ -26,5 +26,5 @@ class DWHRuleTechnicalIgnore(DWHRuleTechnical):
         """Get the markdown documentation of the technical rule (ignoring this table)"""
         return super().markdown(table, directory)
 
-    def __init__(self, name, **kwargs):
-        super().__init__(name)
+    def __init__(self, instance, name, **kwargs):
+        super().__init__(instance, name)
