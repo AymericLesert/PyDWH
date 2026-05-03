@@ -6,10 +6,12 @@ This module describes the list of instances.
 """
 
 import os
-from pickle import NONE
+
+from configuration.configurationitem import DWHConfigurationItem
 
 from exception.exceptionrule import DWHExceptionRule
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
+from exception.exceptionrecordfieldinvalid import DWHExceptionRecordFieldInvalid
 
 from tools.markdown import Markdown
 from logger.loggerobject import DWHLoggerObject
@@ -311,8 +313,10 @@ class DWHInstance(DWHLoggerObject):
             # Set the properties of the fields
 
             for field_name, field_cfg in cfg.get('fields', {}).items():
-                if field_cfg is not None and field_name in table.fields:
-                    table.fields[field_name].description = field_cfg.get('description', None)
+                if field_cfg is None or field_name not in table.fields:
+                    continue
+                table.fields[field_name].description = field_cfg.get('description', None)
+                table.fields[field_name].regex = field_cfg.get('regex', None)
 
             # Set the list of keys
 
@@ -411,6 +415,20 @@ class DWHInstance(DWHLoggerObject):
     def apply(self, record):
         valid = True
 
+        # Check all values read
+
+        for field in record.get_table().fields.values():
+            try:
+                field.check(record[field.name])
+            except DWHExceptionRecordFieldInvalid as exception_field:
+                key = f"{field.table.name}.{field.name}"
+                if key not in self.__fields_invalid:
+                    self.__fields_invalid[key] = []
+                self.__fields_invalid[key].append(exception_field)
+                valid = False
+
+        # Apply rules on record and stop if one rule fails or has to be ignored
+
         for rule in self.__rules:
             try:
                 rule.execute(record)
@@ -458,7 +476,14 @@ class DWHInstance(DWHLoggerObject):
             for rule_name, counter in rules.items():
                 self.error(f"- {counter} x {rule_name}")
 
-        if len(self.__fields_unknown) > 0 and self.__notifications['filename'] is not None:
+        if len(self.__fields_invalid) > 0:
+            self.error("List of invalid values\n")
+            for name, errors in self.__fields_invalid.items():
+                self.error(f"Field '{name}'")
+                for error in errors:
+                    self.error(f"- {error.message}")
+
+        if (len(self.__fields_unknown) > 0 or len(self.__fields_invalid) > 0) and self.__notifications['filename'] is not None:
             try:
                 directory = os.path.dirname(self.__notifications['filename'])
                 if directory != '':
@@ -472,11 +497,20 @@ class DWHInstance(DWHLoggerObject):
                 self.info(f"Creating the file {self.__notifications['filename']} ...")
                 with open(self.__notifications['filename'], 'w', encoding = "utf-8") as file:
                     file.write(f"---=== {Date.NOW.strftime("%Y-%m-%d")} : {self.__name} ===---\n")
-                    file.write("List of fields unknown into the table of the source configuration\n")
-                    for name, rules in self.__fields_unknown.items():
-                        file.write(f"Field '{name}' unknown into the table of the source configuration\n")
-                        for rule_name, counter in rules.items():
-                            file.write(f"- {counter} x {rule_name}\n")
+
+                    if len(self.__fields_unknown) > 0:
+                        file.write("List of fields unknown into the table of the source configuration\n")
+                        for name, rules in self.__fields_unknown.items():
+                            file.write(f"Field '{name}' unknown into the table of the source configuration\n")
+                            for rule_name, counter in rules.items():
+                                file.write(f"- {counter} x {rule_name}\n")
+
+                    if len(self.__fields_invalid) > 0:
+                        file.write("List of invalid values\n")
+                        for name, errors in self.__fields_invalid.items():
+                            file.write(f"- Field '{name}':\n")
+                            for error in errors:
+                                file.write(f"-> {error.message}\n")
 
                 # Send the report by mail
 
@@ -650,6 +684,7 @@ class DWHInstance(DWHLoggerObject):
         self.__targets = []
         self.__reports = {}
         self.__fields_unknown = {}
+        self.__fields_invalid = {}
         self.__description = configuration.get('description', None)
         self.__statistics = {}
         self.__error = False
@@ -659,6 +694,8 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Declaring users ...")
         for configuration_users in configuration.get('users', []):
+            if not isinstance(configuration_users, DWHConfigurationItem):
+                continue
             name = configuration_users.get('name', '')
             new_group = self.__user_factory(name, configuration_users)
             if new_group is None:
@@ -670,6 +707,8 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Declaring sources ...")
         for configuration_source in configuration.get('sources', []):
+            if not isinstance(configuration_source, DWHConfigurationItem):
+                continue
             name = configuration_source.get('name', '')
             new_source = self.__source_factory(name, configuration_source)
             if new_source is None:
@@ -681,6 +720,8 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Describing tables ...")
         for configuration_table in configuration.get('tables', []):
+            if not isinstance(configuration_table, DWHConfigurationItem):
+                continue
             name = configuration_table.get('name', '')
             new_table = self.__table_factory(name, configuration_table)
             if new_table is None:
@@ -692,6 +733,8 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Describing rules ...")
         for configuration_rule in configuration.get('rules', []):
+            if not isinstance(configuration_rule, DWHConfigurationItem):
+                continue
             name = configuration_rule.get('name', '')
             new_rule = self.__rule_factory(name, configuration_rule)
             if new_rule is None:
@@ -703,6 +746,8 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Declaring targets ...")
         for configuration_target in configuration.get('targets', []):
+            if not isinstance(configuration_target, DWHConfigurationItem):
+                continue
             name = configuration_target.get('name', '')
             new_target = self.__target_factory(name, configuration_target)
             if new_target is None:

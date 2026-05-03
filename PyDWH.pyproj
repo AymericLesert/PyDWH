@@ -65,6 +65,7 @@
     <Compile Include="src\connector\writer\__init__.py" />
     <Compile Include="src\connector\__init__.py" />
     <Compile Include="src\exception\exception.py" />
+    <Compile Include="src\exception\exceptionrecordfieldinvalid.py" />
     <Compile Include="src\exception\exceptionrule.py" />
     <Compile Include="src\exception\exceptionrecordfieldnotfound.py" />
     <Compile Include="src\exception\exceptionrecordfield.py" />

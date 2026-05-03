@@ -60,7 +60,7 @@ Cette section décrit les différents cas d'usage possibles avec PyDWH.
 4. Analyser la validité d'un champ (Courriel)
 5. Envoyer le rapport des non-respects par email à un membre de l'équipe métier
 
-1. => Exemple : Préparation à la rédaction d'une règle / Vérifie la liste des valeurs possibles
+=> Exemple : Préparation à la rédaction d'une règle / Vérifie la liste des valeurs possibles
 
 ## Cas 2 : Application des règles de qualité des données
 

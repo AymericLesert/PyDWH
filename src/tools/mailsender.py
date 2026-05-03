@@ -6,7 +6,6 @@ This module describes a class sending mail.
 """
 
 import os
-from re import I
 import smtplib
 import ssl
 from email.message import EmailMessage
