@@ -38,6 +38,10 @@ class DWHConfigurationItem:
         """Retrieve the current configuration keys"""
         return self.__items.keys()
 
+    def values(self):
+        """Retrieve the current configuration values"""
+        return self.__items.values()
+
     def to_dict(self):
         """Convert the item to a dict"""
         def subitem(item):

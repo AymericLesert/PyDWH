@@ -21,10 +21,11 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
         value = record[self.field]
         if value is None:
             value = ""
-        items = self.__regex.match(value.strip())
+        value = value.strip()
+        items = self.__regex.match(value)
 
         if items is None:
-            raise DWHExceptionRule(self, record)
+            raise DWHExceptionRule(self, value, record)
 
         for field, properties in self.__values.items():
             group_name = properties.get('name', None)
@@ -36,7 +37,7 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
                 if group_value is None:
                     continue
             except:
-                raise DWHExceptionRule(self, record)
+                raise DWHExceptionRule(self, value, record)
 
             values = properties.get('values', {})
             else_value = properties.get('else', None)
@@ -55,7 +56,7 @@ class DWHRuleFunctionalRegex(DWHRuleFunctional):
         # TODO
         return super().markdown(directory)
 
-    def __init__(self, name, table, field, regex, description = "", values = {}, **kwargs):
-        super().__init__(name, table, field, description)
+    def __init__(self, instance, name, table, field, regex, description = "", notifications = None, values = {}, **kwargs):
+        super().__init__(instance, name, table, field, description, notifications)
         self.__regex = re.compile(regex)
-        self.__values = values.to_dict()
+        self.__values = values.to_dict() if not isinstance(values, dict) else values

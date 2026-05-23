@@ -9,6 +9,14 @@ from logger.loggerobject import DWHLoggerObject
 
 class DWHRule(DWHLoggerObject):
     """This class defines an abstract rule"""
+    # TODO : Implement a rule described into the project
+    # - Field(s)
+    # - Description
+    # - Rule
+    # - Sender of the non-respect of the rule (technical, functional, ...)
+    # - Filter to apply to the non-respect
+    # - Confidentiality level
+    # - List of users allowed to see the value
 
     @property
     def name(self):

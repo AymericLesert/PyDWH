@@ -71,12 +71,24 @@ class DWHConnectorDatabaseField(DWHLoggerObject):
                 field_name = field
             self.__from_fields.append((table_name, field_name))
 
+    @property
+    def regex(self):
+        return None
+
+    @regex.setter
+    def regex(self, value):
+        pass
+
     def copy(self, table):
         return DWHConnectorDatabaseField(table,
                                          self.__name,
                                          self.__is_null,
                                          self.__default_value,
                                          self.__description)
+
+    def check(self, value):
+        """Check if the value is valid for the field"""
+        pass
 
     def convert(self, value):
         """Convert the value to the field type"""

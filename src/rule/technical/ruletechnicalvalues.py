@@ -22,6 +22,7 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
         return self.__description
 
     def execute(self, table):
+        # TODO : Write into a writer (CSV, DB, ...)
         self.info(f"Appending into the CSV file '{self.__csv_file}' ...")
         
         date = datetime.datetime.now().strftime(Date.DATETIME)
@@ -49,6 +50,11 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
                 nb_rows += 1
 
         self.verbose(f"{nb_rows} values(s) in '{row['table']}.{row['field']}''")
+
+        self.send_mail(self.__email,
+                        f"[{self.name}] [{Date.NOW.strftime("%Y-%m-%d")}] Notification", 
+                        f"La pièce jointe contient la liste des valeurs distinctes", 
+                        self.__csv_file)
         return True
 
     def markdown(self, table, directory):
@@ -74,10 +80,11 @@ class DWHRuleTechnicalValues(DWHRuleTechnical):
 
         return md.close()
 
-    def __init__(self, name, csv_file, delimiter=';', encoding='utf-8', field = None, **kwargs):
-        super().__init__(name)
+    def __init__(self, instance, name, csv_file, delimiter=';', encoding='utf-8', field = None, email = None, **kwargs):
+        super().__init__(instance, name)
         self.__csv_file = csv_file
         self.__delimiter = delimiter
         self.__encoding = encoding
         self.__field = field
         self.__description = f"Cette règle extrait les valeurs distinctes de la colonne '{self.__field}' dans la table"
+        self.__email = email

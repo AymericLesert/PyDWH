@@ -174,7 +174,6 @@ class DWHConnectorDatabaseTable(DWHLoggerObject):
         md.title(f"Table {self.name}")
         if self.__description is not None:
             md.paragraph(self.__description)
-            md.paragraph()
 
         if self.__from_tables:
             md.paragraph("Les données sont originaires des tables :")

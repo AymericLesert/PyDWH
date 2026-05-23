@@ -192,11 +192,11 @@ class DWHConnectorDatabaseEngineMySQL(DWHConnectorDatabaseEngine):
             # Add default values
             items.extend([0,0])
             table.add(name = column[0], 
-                        type = DWHConnectorDatabaseEngineMySQL.MAP_TYPE[items[0]], 
-                        length = items[1], 
-                        decimal = items[2], 
-                        is_null = column[2] == 'YES',
-                        default_value = column[4])
+                      type = DWHConnectorDatabaseEngineMySQL.MAP_TYPE[items[0]], 
+                      length = items[1], 
+                      decimal = items[2], 
+                      is_null = column[2] == 'YES',
+                      default_value = column[4])
 
         cursor_column.close()
         return table

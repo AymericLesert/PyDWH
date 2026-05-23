@@ -21,6 +21,7 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
         return self.__description
 
     def execute(self, table):
+        # TODO : Write into a writer (CSV, DB, ...)
         self.info(f"Appending into the CSV file '{self.__csv_file}' ...")
         
         date = datetime.datetime.now().strftime(Date.DATETIME)
@@ -42,6 +43,11 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
             writer.writerow(row)
 
         self.verbose(f"{row['rows']} line(s) in '{row['table']}''")
+
+        self.send_mail(self.__email,
+                        f"[{self.name}] [{Date.NOW.strftime("%Y-%m-%d")}] Notification", 
+                        f"La table '{table.name}' compte {row['rows']} ligne(s).", 
+                        self.__csv_file)
         return True
 
     def markdown(self, table, directory):
@@ -49,9 +55,10 @@ class DWHRuleTechnicalCountRow(DWHRuleTechnical):
         self.__description = f"La table compte {table.count_rows} ligne(s) dans la table."
         return super().markdown(table, directory)
 
-    def __init__(self, name, csv_file, delimiter=';', encoding='utf-8', **kwargs):
-        super().__init__(name)
+    def __init__(self, instance, name, csv_file, delimiter=';', encoding='utf-8', email = None, **kwargs):
+        super().__init__(instance, name)
         self.__csv_file = csv_file
         self.__delimiter = delimiter
         self.__encoding = encoding
         self.__description = "Cette règle compte le nombre de lignes dans la table"
+        self.__email = email

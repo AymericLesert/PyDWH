@@ -5,14 +5,20 @@
 This module describes the list of instances.
 """
 
-from calendar import c
 import os
+
+from configuration.configurationitem import DWHConfigurationItem
 
 from exception.exceptionrule import DWHExceptionRule
 from exception.exceptionrecordfieldnotfound import DWHExceptionRecordFieldNotFound
+from exception.exceptionrecordfieldinvalid import DWHExceptionRecordFieldInvalid
 
 from tools.markdown import Markdown
 from logger.loggerobject import DWHLoggerObject
+from tools.date import Date
+
+from users.usergroup import DWHUserGroup
+from users.user import DWHUser
 
 from connector.database.schema import DWHConnectorDatabaseSchema
 from connector.database.table import DWHConnectorDatabaseTable
@@ -38,9 +44,36 @@ from rule.functional.rulefunctionalregex import DWHRuleFunctionalRegex
 
 class DWHInstance(DWHLoggerObject):
     @property
+    def application(self):  
+        """Get the application of the instance"""
+        return self.__application
+
+    @property
     def name(self):
         """Get the name of the instance"""
         return self.__name
+
+    @property
+    def has_error(self):
+        return self.__error
+
+    @property
+    def users(self):
+        """Get the list of users of the instance"""
+        return self.__users
+
+    def __user_factory(self, name, configuration):
+        self.info(f"Declaring the group of users '{name}' ...")
+
+        if configuration.get('users', None) is None:
+            return DWHUserGroup(name)
+
+        users = []
+        for configuration_user in configuration.get('users').to_dict().values():
+            self.verbose(f"- Adding user '{configuration_user.get('name', '')}' ...")
+            users.append(DWHUser(**configuration_user))
+
+        return DWHUserGroup(name, users)
 
     def __source_factory(self, name, configuration):
         self.info(f"Declaring the source '{name}' ...")
@@ -80,7 +113,7 @@ class DWHInstance(DWHLoggerObject):
         # Initiate the rule
 
         try:
-            return klass(name, **configuration)
+            return klass(self, name, **configuration)
         except:
             self.exception(f"Exception on defining the functional rule '{name}'")
 
@@ -100,7 +133,7 @@ class DWHInstance(DWHLoggerObject):
         # Initiate the rule
 
         try:
-            return klass(**configuration)
+            return klass(self, **configuration)
         except:
             self.exception(f"Exception on defining the functional rule '{name}'")
 
@@ -177,6 +210,39 @@ class DWHInstance(DWHLoggerObject):
         self.open()
         return self
 
+    def send_mail(self, to_addrs, subject, content, filename = None):
+        if to_addrs is None or self.application is None or self.application.mailer is None:
+            self.verbose("No mail sent")
+            return 0
+
+        # Build the list of groups
+
+        groups = []
+        if isinstance(to_addrs, str):
+            groups.append(to_addrs)
+        elif isinstance(to_addrs, (list, tuple)):
+            groups.extend(list(to_addrs))
+
+        # Build the list of emails from groups
+
+        users = {}
+        for group in groups:
+            if not group in self.users:
+                continue
+
+            for user in self.users[group].users:
+                users[user.name] = user
+
+        # Send email to all users
+
+        nb_mails = 0
+        for user in users.values():
+            if self.application.mailer.send(user.email, subject, f"Bonjour {user.name},\n\n{content}\n\n{self.application.mailer.signature}", filename):
+                nb_mails += 1
+
+        self.info(f"{nb_mails} mails sent")
+        return nb_mails
+
     def open(self):
         self.info("Openning the instance ...")
         
@@ -247,8 +313,10 @@ class DWHInstance(DWHLoggerObject):
             # Set the properties of the fields
 
             for field_name, field_cfg in cfg.get('fields', {}).items():
-                if field_cfg is not None and field_name in table.fields:
-                    table.fields[field_name].description = field_cfg.get('description', None)
+                if field_cfg is None or field_name not in table.fields:
+                    continue
+                table.fields[field_name].description = field_cfg.get('description', None)
+                table.fields[field_name].regex = field_cfg.get('regex', None)
 
             # Set the list of keys
 
@@ -335,7 +403,7 @@ class DWHInstance(DWHLoggerObject):
         table_cfg = self.__tables[table_name]
         for rule_name, rule in table_cfg.get('rules', {}).items():
             self.info(f"Executing rule '{rule_name}' on the table '{table_name}' ...")
-            new_rule = self.__rule_technical_factory(rule_name, rule)
+            new_rule = self.__rule_technical_factory(f"{table_name}.{rule_name}", rule)
             if new_rule is None:
                 return False
 
@@ -346,6 +414,20 @@ class DWHInstance(DWHLoggerObject):
 
     def apply(self, record):
         valid = True
+
+        # Check all values read
+
+        for field in record.get_table().fields.values():
+            try:
+                field.check(record[field.name])
+            except DWHExceptionRecordFieldInvalid as exception_field:
+                key = f"{field.table.name}.{field.name}"
+                if key not in self.__fields_invalid:
+                    self.__fields_invalid[key] = []
+                self.__fields_invalid[key].append(exception_field)
+                valid = False
+
+        # Apply rules on record and stop if one rule fails or has to be ignored
 
         for rule in self.__rules:
             try:
@@ -387,15 +469,101 @@ class DWHInstance(DWHLoggerObject):
                 self.exception(f"Exception on committing record to target '{target.name}'")
 
     def reports(self):
+        # Write all fields unknown into the log
+
         for name, rules in self.__fields_unknown.items():
             self.error(f"Field '{name}' unknown into the table of the source configuration")
             for rule_name, counter in rules.items():
                 self.error(f"- {counter} x {rule_name}")
 
+        if len(self.__fields_invalid) > 0:
+            self.error("List of invalid values\n")
+            for name, errors in self.__fields_invalid.items():
+                self.error(f"Field '{name}'")
+                for error in errors:
+                    self.error(f"- {error.message}")
+
+        if (len(self.__fields_unknown) > 0 or len(self.__fields_invalid) > 0) and self.__notifications['filename'] is not None:
+            try:
+                directory = os.path.dirname(self.__notifications['filename'])
+                if directory != '':
+                    try:
+                        os.makedirs(directory, exist_ok=True)
+                    except:
+                        pass
+
+                # Generate the technical report into a file
+
+                self.info(f"Creating the file {self.__notifications['filename']} ...")
+                with open(self.__notifications['filename'], 'w', encoding = "utf-8") as file:
+                    file.write(f"---=== {Date.NOW.strftime("%Y-%m-%d")} : {self.__name} ===---\n")
+
+                    if len(self.__fields_unknown) > 0:
+                        file.write("List of fields unknown into the table of the source configuration\n")
+                        for name, rules in self.__fields_unknown.items():
+                            file.write(f"Field '{name}' unknown into the table of the source configuration\n")
+                            for rule_name, counter in rules.items():
+                                file.write(f"- {counter} x {rule_name}\n")
+
+                    if len(self.__fields_invalid) > 0:
+                        file.write("List of invalid values\n")
+                        for name, errors in self.__fields_invalid.items():
+                            file.write(f"- Field '{name}':\n")
+                            for error in errors:
+                                file.write(f"-> {error.message}\n")
+
+                # Send the report by mail
+
+                if self.__notifications['email'] is not None:
+                    self.send_mail(self.__notifications['email'], 
+                                    f"[{self.name}] [{Date.NOW.strftime("%Y-%m-%d")}] Rapport technique", 
+                                    "Veuillez trouver ci-joint le rapport technique.", 
+                                    self.__notifications['filename'])
+            except:
+                self.exception("Exception on creating the technical report file")
+
+        # Write all rules non respected into the log
+
         for name, exceptions in self.__reports.items():
             self.error(f"{name} not expected")
+
+            rule = None
             for exception in exceptions:
-                self.error(f"- {exception.record}")
+                self.error(f"- '{exception.value}' in {exception.record}")
+                rule = exception.rule
+
+            if rule is None:
+                continue
+
+            # Generate a functional report into a file before sending the mail
+
+            if rule.filename is not None:
+                try:
+                    directory = os.path.dirname(rule.filename)
+                    if directory != '':
+                        try:
+                            os.makedirs(directory, exist_ok=True)
+                        except:
+                            pass
+
+                    # Generate the function report into a file
+
+                    self.info(f"Creating the file {rule.filename} ...")
+                    with open(rule.filename, 'w', encoding = "utf-8") as file:
+                        file.write(f"---=== {Date.NOW.strftime("%Y-%m-%d")} : {rule.name} - {self.__name} ===---\n")
+                        file.write(f"{name} not expected\n")
+                        for exception in exceptions:
+                            file.write(f"- '{exception.value}' in {exception.record}\n")
+
+                    # Send the report by mail
+
+                    if rule.email is not None:
+                        self.send_mail(rule.email, 
+                                        f"[{rule.name}] [{Date.NOW.strftime("%Y-%m-%d")}] Rapport des erreurs", 
+                                        f"Veuillez trouver ci-joint le rapport des erreurs du non respect :\n\n{rule.description}", 
+                                        rule.filename)
+                except:
+                    self.exception("Exception on creating the functional report file")
 
     def markdown(self, directory):
         if directory is None:
@@ -501,29 +669,50 @@ class DWHInstance(DWHLoggerObject):
         """Close the instance"""
         self.close()
 
-    def __init__(self, configuration, mailer):
+    def __init__(self, application, configuration):
         self.__name = configuration.get('name', '')
         super().__init__(self.name)
 
         # Initialisation des propriétés de l'instance
 
+        self.__application = application
         self.__schema = None
+        self.__users = {}
         self.__sources = []
         self.__tables = {}
         self.__rules = []
         self.__targets = []
         self.__reports = {}
         self.__fields_unknown = {}
-        self.__mailer = mailer
+        self.__fields_invalid = {}
         self.__description = configuration.get('description', None)
+        self.__statistics = {}
+        self.__error = False
+        self.__notifications = None
+
+        # Creation des utilisateurs
+
+        self.info("Declaring users ...")
+        for configuration_users in configuration.get('users', []):
+            if not isinstance(configuration_users, DWHConfigurationItem):
+                continue
+            name = configuration_users.get('name', '')
+            new_group = self.__user_factory(name, configuration_users)
+            if new_group is None:
+                self.__error = True
+                continue
+            self.__users[new_group.name]= new_group
 
         # Creation des sources
 
         self.info("Declaring sources ...")
         for configuration_source in configuration.get('sources', []):
+            if not isinstance(configuration_source, DWHConfigurationItem):
+                continue
             name = configuration_source.get('name', '')
             new_source = self.__source_factory(name, configuration_source)
             if new_source is None:
+                self.__error = True
                 continue
             self.__sources.append(new_source)
 
@@ -531,9 +720,12 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Describing tables ...")
         for configuration_table in configuration.get('tables', []):
+            if not isinstance(configuration_table, DWHConfigurationItem):
+                continue
             name = configuration_table.get('name', '')
             new_table = self.__table_factory(name, configuration_table)
             if new_table is None:
+                self.__error = True
                 continue
             self.__tables[name] = new_table
 
@@ -541,9 +733,12 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Describing rules ...")
         for configuration_rule in configuration.get('rules', []):
+            if not isinstance(configuration_rule, DWHConfigurationItem):
+                continue
             name = configuration_rule.get('name', '')
             new_rule = self.__rule_factory(name, configuration_rule)
             if new_rule is None:
+                self.__error = True
                 continue
             self.__rules.append(new_rule)
 
@@ -551,8 +746,18 @@ class DWHInstance(DWHLoggerObject):
 
         self.info("Declaring targets ...")
         for configuration_target in configuration.get('targets', []):
+            if not isinstance(configuration_target, DWHConfigurationItem):
+                continue
             name = configuration_target.get('name', '')
             new_target = self.__target_factory(name, configuration_target)
             if new_target is None:
+                self.__error = True
                 continue
             self.__targets.append(new_target)
+
+        # TODO : Lecture des propriétés du fichier statistique
+
+        # Destinataire des rapports techniques
+
+        notifications = configuration.get('notifications', {})
+        self.__notifications = { 'email': notifications.get('email', None), 'filename': notifications.get('filename', None) }

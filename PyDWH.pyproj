@@ -15,7 +15,7 @@
     <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
     <IsWindowsApplication>False</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--config ../PyDWHConfig/config.yml --instance DSP</CommandLineArguments>
+    <CommandLineArguments>--config ../PyDWHConfig/config.yml --instance CAS001</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <Environment>PYTHONPATH=src\</Environment>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
@@ -65,6 +65,7 @@
     <Compile Include="src\connector\writer\__init__.py" />
     <Compile Include="src\connector\__init__.py" />
     <Compile Include="src\exception\exception.py" />
+    <Compile Include="src\exception\exceptionrecordfieldinvalid.py" />
     <Compile Include="src\exception\exceptionrule.py" />
     <Compile Include="src\exception\exceptionrecordfieldnotfound.py" />
     <Compile Include="src\exception\exceptionrecordfield.py" />
@@ -78,6 +79,8 @@
     <Compile Include="src\connector\reader\readermysql.py" />
     <Compile Include="src\connector\reader\__init__.py" />
     <Compile Include="src\instance\application.py" />
+    <Compile Include="src\users\usergroup.py" />
+    <Compile Include="src\users\user.py" />
     <Compile Include="src\logger\logger.py" />
     <Compile Include="src\logger\loggerobject.py" />
     <Compile Include="src\logger\loggertimer.py" />
@@ -104,8 +107,9 @@
     <Compile Include="src\scripts\__init__.py" />
     <Compile Include="src\tools\markdown.py" />
     <Compile Include="src\tools\date.py" />
-    <Compile Include="src\tools\smtp.py" />
+    <Compile Include="src\tools\mailsender.py" />
     <Compile Include="src\tools\__init__.py" />
+    <Compile Include="src\users\__init__.py" />
     <Compile Include="test\engine\test_csv_writer.py" />
     <Compile Include="test\engine\test_csv_reader.py" />
   </ItemGroup>
@@ -121,6 +125,7 @@
     <Content Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="src\users\" />
     <Folder Include="test\" />
     <Folder Include="src\configuration\" />
     <Folder Include="src\connector\database\" />
