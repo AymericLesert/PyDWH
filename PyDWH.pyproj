@@ -4,14 +4,21 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>92a0a3c8-44e8-4439-be1a-7ba55a6b533e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PyDWH.py</StartupFile>
+    <StartupFile>src/scripts/dwh_rules.py</StartupFile>
     <SearchPath>
     </SearchPath>
-    <WorkingDirectory>.</WorkingDirectory>
+    <WorkingDirectory>D:\024 - Team Plastique\PyDWH</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PyDWH</Name>
     <RootNamespace>PyDWH</RootNamespace>
-    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|dwh|$(MSBuildProjectFullPath)</InterpreterId>
+    <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>--config ../PyDWHConfig/config.yml --instance CAS001</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <Environment>PYTHONPATH=src\</Environment>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,22 +29,135 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="PyDWH.py" />
+    <Compile Include="src\configuration\configuration.py" />
+    <Compile Include="src\configuration\configurationitem.py" />
+    <Compile Include="src\configuration\__init__.py" />
+    <Compile Include="src\connector\database\fielddatetime.py" />
+    <Compile Include="src\connector\database\fielddate.py" />
+    <Compile Include="src\connector\database\fieldboolean.py" />
+    <Compile Include="src\connector\database\fielddouble.py" />
+    <Compile Include="src\connector\database\fieldjson.py" />
+    <Compile Include="src\connector\database\fieldstring.py" />
+    <Compile Include="src\connector\database\fieldinteger.py" />
+    <Compile Include="src\connector\database\record.py" />
+    <Compile Include="src\connector\database\field.py" />
+    <Compile Include="src\connector\database\table.py" />
+    <Compile Include="src\connector\database\schema.py" />
+    <Compile Include="src\connector\database\__init__.py" />
+    <Compile Include="src\connector\engine\enginecsvreader.py" />
+    <Compile Include="src\connector\engine\enginecsvwriter.py" />
+    <Compile Include="src\connector\engine\enginehfsql.py" />
+    <Compile Include="src\connector\engine\enginecsv.py" />
+    <Compile Include="src\connector\engine\enginepostgresql.py" />
+    <Compile Include="src\connector\engine\enginesqlserver.py" />
+    <Compile Include="src\connector\engine\enginemysql.py" />
+    <Compile Include="src\connector\engine\engine.py" />
+    <Compile Include="src\connector\engine\__init__.py" />
+    <Compile Include="src\connector\reader\readerhfsql.py" />
+    <Compile Include="src\connector\reader\readerpostgresql.py" />
+    <Compile Include="src\connector\reader\readercsv.py" />
+    <Compile Include="src\connector\reader\readersqlserver.py" />
+    <Compile Include="src\connector\writer\writermysql.py" />
+    <Compile Include="src\connector\writer\writer.py" />
+    <Compile Include="src\connector\writer\writerspostgresql.py" />
+    <Compile Include="src\connector\writer\writercsv.py" />
+    <Compile Include="src\connector\writer\writersqlserver.py" />
+    <Compile Include="src\connector\writer\__init__.py" />
+    <Compile Include="src\connector\__init__.py" />
+    <Compile Include="src\exception\exception.py" />
+    <Compile Include="src\exception\exceptionrecordfieldinvalid.py" />
+    <Compile Include="src\exception\exceptionrule.py" />
+    <Compile Include="src\exception\exceptionrecordfieldnotfound.py" />
+    <Compile Include="src\exception\exceptionrecordfield.py" />
+    <Compile Include="src\exception\exceptionrecord.py" />
+    <Compile Include="src\exception\exceptiondatabase.py" />
+    <Compile Include="src\exception\exceptiondatabasenotconnected.py" />
+    <Compile Include="src\exception\exceptiondatabaserequest.py" />
+    <Compile Include="src\exception\exceptiondatabaseunknown.py" />
+    <Compile Include="src\exception\__init__.py" />
+    <Compile Include="src\connector\reader\reader.py" />
+    <Compile Include="src\connector\reader\readermysql.py" />
+    <Compile Include="src\connector\reader\__init__.py" />
+    <Compile Include="src\instance\application.py" />
+    <Compile Include="src\users\usergroup.py" />
+    <Compile Include="src\users\user.py" />
+    <Compile Include="src\logger\logger.py" />
+    <Compile Include="src\logger\loggerobject.py" />
+    <Compile Include="src\logger\loggertimer.py" />
+    <Compile Include="src\logger\__init__.py" />
+    <Compile Include="src\instance\instance.py" />
+    <Compile Include="src\instance\__init__.py" />
+    <Compile Include="src\rule\functional\rulefunctionalregex.py" />
+    <Compile Include="src\rule\functional\rulefunctionallistvalues.py" />
+    <Compile Include="src\rule\functional\rulefunctional.py" />
+    <Compile Include="src\rule\functional\__init__.py" />
+    <Compile Include="src\rule\technical\ruletechnicalvalues.py" />
+    <Compile Include="src\rule\technical\ruletechnicalcountrow.py" />
+    <Compile Include="src\rule\technical\ruletechnicalignore.py" />
+    <Compile Include="src\rule\technical\ruletechnical.py" />
+    <Compile Include="src\rule\rule.py" />
+    <Compile Include="src\rule\technical\__init__.py" />
+    <Compile Include="src\rule\__init__.py" />
+    <Compile Include="src\scripts\dwh_key_decrypt.py" />
+    <Compile Include="src\scripts\dwh_key_encrypt.py" />
+    <Compile Include="src\scripts\dwh_rules.py" />
+    <Compile Include="src\scripts\dwh_key_new.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="src\scripts\__init__.py" />
+    <Compile Include="src\tools\markdown.py" />
+    <Compile Include="src\tools\date.py" />
+    <Compile Include="src\tools\mailsender.py" />
+    <Compile Include="src\tools\__init__.py" />
+    <Compile Include="src\users\__init__.py" />
+    <Compile Include="test\engine\test_csv_writer.py" />
+    <Compile Include="test\engine\test_csv_reader.py" />
   </ItemGroup>
   <ItemGroup>
-    <Interpreter Include="env\">
-      <Id>env</Id>
+    <Content Include=".env" />
+    <Content Include="LICENSE.txt" />
+    <Content Include="PROJECT" />
+    <Content Include="pyproject.toml" />
+    <Content Include="README.md" />
+    <Content Include="requirements.txt" />
+    <Content Include="test\config\empty.yml" />
+    <Content Include="test\config\logging.yml" />
+    <Content Include="VERSION" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\users\" />
+    <Folder Include="test\" />
+    <Folder Include="src\configuration\" />
+    <Folder Include="src\connector\database\" />
+    <Folder Include="src\connector\engine\" />
+    <Folder Include="src\logger\" />
+    <Folder Include="src\exception\" />
+    <Folder Include="src\" />
+    <Folder Include="src\connector\" />
+    <Folder Include="src\connector\reader\" />
+    <Folder Include="src\connector\writer\" />
+    <Folder Include="src\instance\" />
+    <Folder Include="src\tools\" />
+    <Folder Include="src\rule\" />
+    <Folder Include="src\rule\functional\" />
+    <Folder Include="src\rule\technical\" />
+    <Folder Include="src\scripts\" />
+    <Folder Include="test\config\" />
+    <Folder Include="test\engine\" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="dwh\">
+      <Id>dwh</Id>
       <Version>3.13</Version>
-      <Description>env (Python 3.13 (64-bit))</Description>
+      <Description>dwh (Python 3.13.9)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
       <Architecture>X64</Architecture>
     </Interpreter>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include=".env" />
-    <Content Include="requirements.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

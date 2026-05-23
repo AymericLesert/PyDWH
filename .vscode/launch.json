@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}${pathSeparator}src${env:PYTHONPATH}"
+            },
+            "name": "Python Debugger: dwh_rules",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/scripts/dwh_rules.py",
+            "console": "integratedTerminal",
+            "args": "--config ../PyDWHConfig/config.yml --instance PMI"
+        }
+    ]
+}

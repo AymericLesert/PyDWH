@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyDWH"
+authors = [
+    {name = "Aymeric LESERT", email = "aymeric.lesert@concilium-lesert.fr"},
+]
+description = "Analyse et alimentation d'un entrepôt de données"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "UNLICENSE"
+dynamic = ["version", "dependencies"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { file = ["VERSION"] }
+dependencies = { file = ["requirements.txt"] }
+
+[project.scripts]
+dwh-key-new = "scripts.dwh_key_new:execute"
+dwh-key-encrypt = "scripts.dwh_key_encrypt:execute"
+dwh-key-decrypt = "scripts.dwh_key_decrypt:execute"
+dwh-rules = "scripts.dwh_rules:execute"

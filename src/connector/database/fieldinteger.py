@@ -1,0 +1,44 @@
+﻿# -*- coding: utf-8 -*-
+# pylint: disable=bare-except
+
+"""
+This module describes an integer field.
+"""
+
+from connector.database.field import DWHConnectorDatabaseField
+
+class DWHConnectorDatabaseFieldInteger(DWHConnectorDatabaseField):
+    """This class defines an integer field"""
+
+    @property
+    def type(self):
+        """Get the type of the field"""
+        return "Integer"
+
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldInteger(table,
+                                                self.name,
+                                                self.is_null,
+                                                self.default_value,
+                                                self.description)
+
+    def to_mysql(self):
+        return super().to_mysql("int")
+
+    def to_SQLServer(self):
+        return super().to_SQLServer("int")
+
+    def to_PostgreSQL(self):
+        return super().to_PostgreSQL("integer")
+
+    def convert(self, value):
+        """Convert the value to the field type"""
+        # TODO: improve type conversion
+        if value is None:
+            return value
+        return int(value)
+
+    def __init__(self, table, name, is_null = True, default_value = None, description = "", **kwargs):
+        if not is_null and default_value is None:
+            default_value = 0
+        super().__init__(table, name, is_null, default_value, description)

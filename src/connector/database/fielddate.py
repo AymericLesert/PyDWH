@@ -1,0 +1,48 @@
+﻿# -*- coding: utf-8 -*-
+# pylint: disable=bare-except
+
+"""
+This module describes a date field.
+"""
+
+from connector.database.field import DWHConnectorDatabaseField
+from tools.date import Date
+
+class DWHConnectorDatabaseFieldDate(DWHConnectorDatabaseField):
+    """This class defines a date field"""
+
+    @property
+    def type(self):
+        """Get the type of the field"""
+        return "Date"
+
+    @property
+    def format(self):
+        """Get the format of the field"""
+        return Date.DATE
+
+    def copy(self, table):
+        return DWHConnectorDatabaseFieldDate(table,
+                                             self.name,
+                                             self.is_null,
+                                             self.default_value,
+                                             self.description)
+
+    def to_mysql(self):
+        return super().to_mysql("date")
+
+    def to_SQLServer(self):
+        return super().to_SQLServer("date")
+
+    def to_PostgreSQL(self):
+        return super().to_PostgreSQL("date")
+
+    def convert(self, value):
+        """Convert the value to the field type"""
+        # TODO: improve type conversion
+        return value
+
+    def __init__(self, table, name, is_null = True, default_value = None, description = "", **kwargs):
+        if not is_null and default_value is None:
+            default_value = Date.NOW
+        super().__init__(table, name, is_null, default_value, description)
