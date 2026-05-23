@@ -88,7 +88,7 @@ class DWHConnectorDatabaseEnginePostgreSQL(DWHConnectorDatabaseEngine):
     def open(self):
         """Connect to the Postgre SQL database"""
         super().open()
-        self.info(f"Connecting to Postgre SQL database ({self.__host}.{self.__database}@{self.__user})")
+        self.info(f"Connecting to Postgre SQL database ({self.__host}.{self.__database}/{self.__schema_name}@{self.__user})")
         try:
             self.__connexion = psycopg2.connect(host = self.__host,
                                                 port = self.__port, 
@@ -102,10 +102,10 @@ class DWHConnectorDatabaseEnginePostgreSQL(DWHConnectorDatabaseEngine):
     def create_dwh(self):
         super().create_dwh()
 
-        request = 'CREATE TABLE "DWHAction" ("Id" integer not null PRIMARY KEY,"Label" varchar(12) not null)'
+        request = f"""CREATE TABLE "DWHAction" ("Id" integer not null PRIMARY KEY,"Label" varchar(12) not null)"""
         self.execute(request).close()
 
-        request = 'INSERT INTO "DWHAction" ("Id", "Label") VALUES (%s, %s)'
+        request = f"""INSERT INTO "DWHAction" ("Id", "Label") VALUES (%s, %s)"""
         self.execute(request, [[DWHConnectorDatabaseEngine.DWH_ACTION_ADD, "Création"], 
                                [DWHConnectorDatabaseEngine.DWH_ACTION_UPDATE, "Mise à jour"],
                                [DWHConnectorDatabaseEngine.DWH_ACTION_REMOVE, "Suppression"]]).close()
